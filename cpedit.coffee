@@ -12,7 +12,6 @@ class Editor
     @creaseGroup = @svg.group()
     .addClass 'crease'
     @updateGrid()
-    @lineDrawMode()
 
   updateGrid: ->
     @gridGroup.clear()
@@ -26,57 +25,78 @@ class Editor
     x: Math.max @page.xMin, Math.min @page.xMax, Math.round pt.x
     y: Math.max @page.yMin, Math.min @page.yMax, Math.round pt.y
 
-  nullMode: ->
-    @svg.mousemove null
-    @svg.mousedown null
-    @svg.mouseup null
-    @svg.mouseenter null
+  setMode: (mode) ->
+    @mode?.exit @
+    @mode = mode
+    @mode.enter @
 
-  lineDrawMode: ->
-    @nullMode()
-    which = 0 ## 0 = first point, 1 = second point
-    points = {}
-    circles = []
-    crease = null
-    @svg.mousemove move = (e) =>
+class Mode
+  enter: ->
+  exit: (editor) ->
+    editor.svg
+    .mousemove null
+    .mousedown null
+    .mouseup null
+    .mouseenter null
+
+class LineDrawMode extends Mode
+  constructor: (@lineType) ->
+    super()
+  enter: (editor) ->
+    svg = editor.svg
+    @which = 0 ## 0 = first point, 1 = second point
+    @points = {}
+    @circles = []
+    @crease = null
+    svg.mousemove move = (e) =>
       ## Cancel crease if user exits, lets go of button, and re-enters
-      if which == 1 and e.buttons == 0
-        circles.pop().remove()
-        crease.remove()
-        crease = null
-        which = 0
-      points[which] = @nearestFeature @svg.point e.clientX, e.clientY
-      unless which < circles.length
-        circles.push(
-          @svg.circle 0.3
+      if @which == 1 and e.buttons == 0
+        @circles.pop().remove()
+        @crease.remove()
+        @crease = null
+        @which = 0
+      @points[@which] = editor.nearestFeature svg.point e.clientX, e.clientY
+      unless @which < @circles.length
+        @circles.push(
+          svg.circle 0.3
           .addClass 'drag'
         )
-      circles[which].center points[which].x, points[which].y
-      if which == 1
-        crease ?= @creaseGroup.line().addClass 'drag'
-        crease.plot points[0].x, points[0].y, points[1].x, points[1].y
-    @svg.mousedown (e) =>
+      @circles[@which].center @points[@which].x, @points[@which].y
+      if @which == 1
+        @crease ?= editor.creaseGroup.line().addClass 'drag'
+        @crease.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
+    svg.mousedown (e) =>
       move e
-      which = 1
-    @svg.mouseup (e) =>
+      @which = 1
+    svg.mouseup (e) =>
       eDown =
         clientX: e.clientX
         clientY: e.clientY
         buttons: -1
       move eDown
       ## Delete crease if zero length
-      if points[0].x == points[1].x and
-         points[0].y == points[1].y
-        crease.remove()
+      if @points[0].x == @points[1].x and
+         @points[0].y == @points[1].y
+        @crease.remove()
       else
-        crease.removeClass 'drag'
-      crease = null
-      circles.pop().remove() while circles.length
-      which = 0
+        @crease.removeClass 'drag'
+      @crease = null
+      @circles.pop().remove() while @circles.length
+      @which = 0
       move eDown
-    @svg.mouseenter move
+    svg.mouseenter move
+  exit: (editor) ->
+    super editor
+    @circles.pop().remove() while @circles.length
+    @line?.remove()
 
 editor = null
 window?.onload = ->
   svg = SVG 'interface'
   editor = new Editor svg
+  for input in document.getElementsByTagName 'input'
+    if input.value
+      editor.setMode new LineDrawMode input.id
+    input.addEventListener 'change', (e) ->
+      return unless e.target.value
+      editor.setMode new LineDrawMode e.target.id
