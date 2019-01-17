@@ -1,0 +1,22 @@
+{
+  "name": "cp-editor",
+  "version": "0.0.0",
+  "description": "Crease pattern editor",
+  "scripts": {
+    "build": "gulp",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Erik Demaine",
+  "license": "MIT",
+  "devDependencies": {
+    "coffeescript": "^2.3.2",
+    "gulp": "^4.0.0",
+    "gulp-chmod": "^2.0.0",
+    "gulp-coffee": "^3.0.3",
+    "gulp-pug": "^4.0.1",
+    "jstransformer-stylus": "^1.5.0"
+  },
+  "dependencies": {
+    "svg.js": "^2.7.1"
+  }
+}
