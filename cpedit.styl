@@ -1,3 +1,35 @@
+// Side-by-side layout of menu and GUI
+body
+  display: flex
+  margin: 0px
+#menu
+  max-width: 33%
+  flex: 0
+  display: flex
+  flex-direction: column
+  justify-content: center
+  background: black
+  color: white
+#interface
+  flex: 1
+
+.input
+  font-size: large
+  white-space: nowrap
+  padding: 5px 10px
+  display: flex
+  align-items: center
+
+  &:hover
+    color: yellow
+    background: gray
+
+  label
+    display: block
+    flex: 1
+
+// Drawing style
+
 line
   stroke-linecap: round
 

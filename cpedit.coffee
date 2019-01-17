@@ -1,4 +1,4 @@
-margin = 0.1
+margin = 0.2
 
 class Editor
   constructor: (@svg) ->
