@@ -28,14 +28,23 @@ class Editor
 
   nullMode: ->
     @svg.mousemove null
+    @svg.mousedown null
+    @svg.mouseup null
+    @svg.mouseenter null
 
   lineDrawMode: ->
     @nullMode()
-    which = 0
+    which = 0 ## 0 = first point, 1 = second point
     points = {}
     circles = []
     crease = null
     @svg.mousemove move = (e) =>
+      ## Cancel crease if user exits, lets go of button, and re-enters
+      if which == 1 and e.buttons == 0
+        circles.pop().remove()
+        crease.remove()
+        crease = null
+        which--
       points[which] = @nearestFeature @svg.point e.clientX, e.clientY
       unless which < circles.length
         circles.push(
@@ -50,13 +59,22 @@ class Editor
       move e
       which++
     @svg.mouseup (e) =>
-      move e
-      # add crease
-      crease.removeClass 'drag'
+      eDown =
+        clientX: e.clientX
+        clientY: e.clientY
+        buttons: -1
+      move eDown
+      ## Delete crease if zero length
+      if points[0].x == points[1].x and
+         points[0].y == points[1].y
+        crease.remove()
+      else
+        crease.removeClass 'drag'
       crease = null
       circles.pop().remove() while circles.length
       which = 0
-      move e
+      move eDown
+    @svg.mouseenter move
 
 editor = null
 window?.onload = ->
