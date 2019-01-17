@@ -23,8 +23,8 @@ class Editor
     @svg.viewbox @page.xMin - margin, @page.yMin - margin, @page.xMax - @page.xMin + 2*margin, @page.yMax - @page.yMin + 2*margin
 
   nearestFeature: (pt) ->
-    x: Math.round pt.x
-    y: Math.round pt.y
+    x: Math.max @page.xMin, Math.min @page.xMax, Math.round pt.x
+    y: Math.max @page.yMin, Math.min @page.yMax, Math.round pt.y
 
   nullMode: ->
     @svg.mousemove null
