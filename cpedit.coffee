@@ -44,7 +44,7 @@ class Editor
         circles.pop().remove()
         crease.remove()
         crease = null
-        which--
+        which = 0
       points[which] = @nearestFeature @svg.point e.clientX, e.clientY
       unless which < circles.length
         circles.push(
@@ -57,7 +57,7 @@ class Editor
         crease.plot points[0].x, points[0].y, points[1].x, points[1].y
     @svg.mousedown (e) =>
       move e
-      which++
+      which = 1
     @svg.mouseup (e) =>
       eDown =
         clientX: e.clientX
