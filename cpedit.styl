@@ -38,10 +38,19 @@ line
   stroke-width: 0.1
 
 .crease line
-  stroke: black
   stroke-width: 0.15
+
+  &.drag
+    stroke: purple
+    stroke-width: 0.25
+  &.line
+    stroke: black
+  &.mountain
+    stroke: red
+  &.valley
+    stroke: blue
+  &.cut
+    stroke: green
 
 circle.drag
   fill: purple
-.crease line.drag
-  stroke: purple

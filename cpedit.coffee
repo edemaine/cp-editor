@@ -47,13 +47,15 @@ class LineDrawMode extends Mode
     @which = 0 ## 0 = first point, 1 = second point
     @points = {}
     @circles = []
+    @line = null
     @crease = null
     svg.mousemove move = (e) =>
       ## Cancel crease if user exits, lets go of button, and re-enters
       if @which == 1 and e.buttons == 0
         @circles.pop().remove()
         @crease.remove()
-        @crease = null
+        @line.remove()
+        @crease = @line = null
         @which = 0
       @points[@which] = editor.nearestFeature svg.point e.clientX, e.clientY
       unless @which < @circles.length
@@ -63,7 +65,9 @@ class LineDrawMode extends Mode
         )
       @circles[@which].center @points[@which].x, @points[@which].y
       if @which == 1
-        @crease ?= editor.creaseGroup.line().addClass 'drag'
+        @line ?= editor.creaseGroup.line().addClass 'drag'
+        @crease ?= editor.creaseGroup.line().addClass @lineType
+        @line.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
         @crease.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
     svg.mousedown (e) =>
       move e
@@ -78,9 +82,8 @@ class LineDrawMode extends Mode
       if @points[0].x == @points[1].x and
          @points[0].y == @points[1].y
         @crease.remove()
-      else
-        @crease.removeClass 'drag'
-      @crease = null
+      @line.remove()
+      @crease = @line = null
       @circles.pop().remove() while @circles.length
       @which = 0
       move eDown
@@ -88,6 +91,7 @@ class LineDrawMode extends Mode
   exit: (editor) ->
     super editor
     @circles.pop().remove() while @circles.length
+    @crease?.remove()
     @line?.remove()
 
 editor = null
@@ -95,8 +99,8 @@ window?.onload = ->
   svg = SVG 'interface'
   editor = new Editor svg
   for input in document.getElementsByTagName 'input'
-    if input.value
+    if input.checked
       editor.setMode new LineDrawMode input.id
     input.addEventListener 'change', (e) ->
-      return unless e.target.value
+      return unless e.target.checked
       editor.setMode new LineDrawMode e.target.id
