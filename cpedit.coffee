@@ -1,5 +1,7 @@
 margin = 0.2
 
+FOLD = require 'fold'
+
 class Editor
   constructor: (@svg) ->
     @page =
@@ -7,10 +9,16 @@ class Editor
       yMin: 0
       xMax: 4
       yMax: 4
+    @fold =
+      vertices_coords: []
+      edges_vertices: []
+      edges_assignment: []
     @gridGroup = @svg.group()
     .addClass 'grid'
     @creaseGroup = @svg.group()
     .addClass 'crease'
+    @vertexGroup = @svg.group()
+    .addClass 'vertex'
     @updateGrid()
 
   updateGrid: ->
@@ -31,6 +39,25 @@ class Editor
     @mode.enter @
   escape: ->
     @mode?.escape? @
+
+  addVertex: (v) ->
+    i = FOLD.filter.addVertex @fold, [v.x, v.y]
+    if i == @fold.vertices_coords.length - 1
+      @vertexGroup.circle 0.2
+      .center v.x, v.y
+    i
+  addCrease: (p1, p2, assignment) ->
+    p1 = @addVertex p1
+    p2 = @addVertex p2
+    newVertices = @fold.vertices_coords.length
+    for e in FOLD.filter.addEdge @fold, p1, p2, FOLD.geom.EPSILON
+      @fold.edges_assignment[e] = assignment
+      coords = (@fold.vertices_coords[v] for v in @fold.edges_vertices[e])
+      @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
+      .addClass assignment
+    for v in @fold.vertices_coords[newVertices..]
+      @vertexGroup.circle 0.2
+      .center ...v
 
 class Mode
   enter: ->
@@ -87,6 +114,7 @@ class LineDrawMode extends Mode
         ## Commit new crease, unless it's zero length.
         unless @points[0].x == @points[1].x and
                @points[0].y == @points[1].y
+          editor.addCrease @points[0], @points[1], @lineType
           @crease = null  # prevent removal in @escape
         @escape editor
         move e
@@ -106,7 +134,6 @@ class LineDrawMode extends Mode
     super editor
     @escape editor
 
-editor = null
 window?.onload = ->
   svg = SVG 'interface'
   editor = new Editor svg
