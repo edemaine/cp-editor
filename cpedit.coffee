@@ -104,3 +104,15 @@ window?.onload = ->
     input.addEventListener 'change', (e) ->
       return unless e.target.checked
       editor.setMode new LineDrawMode e.target.id
+  window.addEventListener 'keypress', (e) =>
+    switch e.key
+      when 'b', 'B'
+        document.getElementById('boundary').click()
+      when 'm', 'M'
+        document.getElementById('mountain').click()
+      when 'v', 'V'
+        document.getElementById('valley').click()
+      when 'u', 'U'
+        document.getElementById('unfolded').click()
+      when 'c', 'C'
+        document.getElementById('cut').click()
