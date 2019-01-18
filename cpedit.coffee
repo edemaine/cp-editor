@@ -111,11 +111,14 @@ window?.onload = ->
   svg = SVG 'interface'
   editor = new Editor svg
   for input in document.getElementsByTagName 'input'
-    if input.checked
-      editor.setMode new LineDrawMode input.id
-    input.addEventListener 'change', (e) ->
-      return unless e.target.checked
-      editor.setMode new LineDrawMode e.target.id
+    do (input) ->
+      if input.checked
+        editor.setMode new LineDrawMode input.id
+      input.addEventListener 'change', (e) ->
+        return unless e.target.checked
+        editor.setMode new LineDrawMode e.target.id
+      input.parentElement.addEventListener 'click', ->
+        input.click()
   window.addEventListener 'keyup', (e) =>
     switch e.key
       when 'b', 'B'
