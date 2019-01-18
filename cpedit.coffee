@@ -29,6 +29,8 @@ class Editor
     @mode?.exit @
     @mode = mode
     @mode.enter @
+  escape: ->
+    @mode?.escape? @
 
 class Mode
   enter: ->
@@ -47,8 +49,8 @@ class LineDrawMode extends Mode
     @which = 0 ## 0 = first point, 1 = second point
     @points = {}
     @circles = []
-    @line = null
-    @crease = null
+    @crease = @line = null
+    @dragging = false
     svg.mousemove move = (e) =>
       ## Cancel crease if user exits, lets go of button, and re-enters
       if @which == 1 and e.buttons == 0
@@ -79,7 +81,8 @@ class LineDrawMode extends Mode
         buttons: -1
       move eDown
       ## Delete crease if zero length
-      if @points[0].x == @points[1].x and
+      if @which == 1 and
+         @points[0].x == @points[1].x and
          @points[0].y == @points[1].y
         @crease.remove()
       @line.remove()
@@ -88,11 +91,15 @@ class LineDrawMode extends Mode
       @which = 0
       move eDown
     svg.mouseenter move
-  exit: (editor) ->
-    super editor
+  escape: (editor) ->
     @circles.pop().remove() while @circles.length
     @crease?.remove()
     @line?.remove()
+    @which = 0
+    @dragging = false
+  exit: (editor) ->
+    super editor
+    @escape editor
 
 editor = null
 window?.onload = ->
@@ -104,7 +111,7 @@ window?.onload = ->
     input.addEventListener 'change', (e) ->
       return unless e.target.checked
       editor.setMode new LineDrawMode e.target.id
-  window.addEventListener 'keypress', (e) =>
+  window.addEventListener 'keyup', (e) =>
     switch e.key
       when 'b', 'B'
         document.getElementById('boundary').click()
@@ -116,3 +123,5 @@ window?.onload = ->
         document.getElementById('unfolded').click()
       when 'c', 'C'
         document.getElementById('cut').click()
+      when 'Escape'
+        editor.escape()
