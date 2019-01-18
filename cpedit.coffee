@@ -50,7 +50,7 @@ class Editor
     p1 = @addVertex p1
     p2 = @addVertex p2
     newVertices = @fold.vertices_coords.length
-    for e in FOLD.filter.addEdge @fold, p1, p2, FOLD.geom.EPSILON
+    for e in FOLD.filter.addEdge @fold, p1, p2, FOLD.geom.EPS
       @fold.edges_assignment[e] = assignment
       coords = (@fold.vertices_coords[v] for v in @fold.edges_vertices[e])
       @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
