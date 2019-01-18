@@ -17,6 +17,7 @@ exports.coffee = coffee = ->
 
 exports.watch = watch = ->
   gulp.watch '*.pug', pug
+  gulp.watch '*.styl', pug
   gulp.watch '*.coffee', coffee
 
 exports.default = gulp.series ...[
