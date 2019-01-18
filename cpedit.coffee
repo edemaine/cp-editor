@@ -52,14 +52,17 @@ class LineDrawMode extends Mode
     @crease = @line = null
     @dragging = false
     svg.mousemove move = (e) =>
-      ## Cancel crease if user exits, lets go of button, and re-enters
-      if @which == 1 and e.buttons == 0
-        @circles.pop().remove()
-        @crease.remove()
-        @line.remove()
-        @crease = @line = null
-        @which = 0
-      @points[@which] = editor.nearestFeature svg.point e.clientX, e.clientY
+      point = editor.nearestFeature svg.point e.clientX, e.clientY
+      ## Wait for distance threshold in drag before triggering drag
+      if e.buttons
+        if @points.down?
+          unless point.x == @points.down.x and
+                 point.y == @points.down.y
+            @dragging = true
+            @which = 1
+        else if @points.down == null
+          @points.down = point
+      @points[@which] = point
       unless @which < @circles.length
         @circles.push(
           svg.circle 0.3
@@ -72,31 +75,33 @@ class LineDrawMode extends Mode
         @line.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
         @crease.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
     svg.mousedown (e) =>
+      @points.down = null # special value meaning 'set'
       move e
-      @which = 1
     svg.mouseup (e) =>
-      eDown =
-        clientX: e.clientX
-        clientY: e.clientY
-        buttons: -1
-      move eDown
-      ## Delete crease if zero length
-      if @which == 1 and
-         @points[0].x == @points[1].x and
-         @points[0].y == @points[1].y
-        @crease.remove()
-      @line.remove()
-      @crease = @line = null
-      @circles.pop().remove() while @circles.length
-      @which = 0
-      move eDown
-    svg.mouseenter move
+      move e
+      ## Click, click style line drawing: advance to second point if not
+      ## currently in drag mode, and didn't just @escape (no "down" point).
+      if @which == 0 and not @dragging and @points.down != undefined
+        @which = 1
+      else
+        ## Commit new crease, unless it's zero length.
+        unless @points[0].x == @points[1].x and
+               @points[0].y == @points[1].y
+          @crease = null  # prevent removal in @escape
+        @escape editor
+        move e
+    svg.mouseenter (e) =>
+      ## Cancel crease if user exits, lets go of button, and re-enters
+      @escape editor if @dragging and e.buttons == 0
+      move e
   escape: (editor) ->
     @circles.pop().remove() while @circles.length
     @crease?.remove()
     @line?.remove()
+    @crease = @line = null
     @which = 0
     @dragging = false
+    @points.down = undefined
   exit: (editor) ->
     super editor
     @escape editor
