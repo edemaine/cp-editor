@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "description": "Crease pattern editor",
   "scripts": {
-    "build": "gulp",
+    "prepare": "gulp",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Erik Demaine",
