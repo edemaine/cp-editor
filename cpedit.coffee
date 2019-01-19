@@ -71,11 +71,30 @@ class Editor
       coords = (@fold.vertices_coords[v] for v in vs)
       @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
       .addClass @fold.edges_assignment[e]
+
   downloadFold: ->
     json = JSON.stringify @fold, null, '  '
     a = document.getElementById 'foldlink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = 'creasepattern.fold'
+    a.click()
+  downloadSVG: ->
+    svg = SVG tempSVG
+    svg.svg @svg.svg()
+    svg.select '.M'
+    .each -> @stroke '#ff0000'
+    svg.select '.V'
+    .each -> @stroke '#0000ff'
+    svg.select '.B'
+    .each -> @stroke '#000000'
+    svg.select '.C'
+    .each -> @stroke '#ffff00'
+    svg.select 'circle'
+    .each -> @remove()
+    svg = svg.svg()
+    a = document.getElementById 'svglink'
+    a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
+    a.download = 'creasepattern.svg'
     a.click()
 
 class Mode
@@ -181,3 +200,5 @@ window?.onload = ->
         editor.escape()
   document.getElementById('downloadFold').addEventListener 'click', ->
     editor.downloadFold()
+  document.getElementById('downloadSVG').addEventListener 'click', ->
+    editor.downloadSVG()

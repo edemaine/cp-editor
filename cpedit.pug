@@ -11,6 +11,9 @@ html
       .input
         input#downloadFold(type='button', value='Download .fold')
         a#foldlink
+      .input
+        input#downloadSVG(type='button', value='Download .svg')
+        a#svglink
       hr
       .input
         input#boundary.lineType(type='radio', name='mode', value='B', checked)
@@ -28,3 +31,4 @@ html
         input#cut.lineType(type='radio', name='mode', value='C')
         label(for='cut') Cut (<code>c</code>)
     div#interface
+    div#tempSVG(style='display: none')
