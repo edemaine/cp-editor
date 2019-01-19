@@ -87,8 +87,7 @@ class Editor
     svg.select('.V').each -> @stroke {color: '#0000ff', width: 0.1}
     svg.select('.B').each -> @stroke {color: '#000000', width: 0.1}
     svg.select('.C').each -> @stroke {color: '#ffff00', width: 0.1}
-    svg.select('.vertex').each -> @remove()
-    svg.select('.drag').each -> @remove()
+    svg.select('.grid, .vertex, .drag').each -> @remove()
     svg = svg.svg()
     a = document.getElementById 'svglink'
     a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
