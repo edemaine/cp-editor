@@ -75,7 +75,7 @@ class Editor
       .addClass @fold.edges_assignment[e]
 
   downloadFold: ->
-    json = JSON.stringify @fold, null, '  '
+    json = FOLD.convert.toJSON @fold
     a = document.getElementById 'foldlink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = 'creasepattern.fold'
