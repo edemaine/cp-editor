@@ -41,7 +41,7 @@ class Editor
     @mode?.escape? @
 
   addVertex: (v) ->
-    i = FOLD.filter.addVertex @fold, [v.x, v.y]
+    i = FOLD.filter.addVertex @fold, [v.x, v.y], FOLD.geom.EPS
     if i == @fold.vertices_coords.length - 1
       @vertexGroup.circle 0.2
       .center v.x, v.y
