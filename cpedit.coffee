@@ -58,6 +58,19 @@ class Editor
     for v in @fold.vertices_coords[newVertices..]
       @vertexGroup.circle 0.2
       .center ...v
+    console.log @fold
+    #@load @fold
+
+  load: (@fold) ->
+    @vertexGroup.clear()
+    for v in @fold.vertices_coords
+      @vertexGroup.circle 0.2
+      .center ...v
+    @creaseGroup.clear()
+    for vs, e in @fold.edges_vertices
+      coords = (@fold.vertices_coords[v] for v in vs)
+      @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
+      .addClass @fold.edges_assignment[e]
 
 class Mode
   enter: ->
