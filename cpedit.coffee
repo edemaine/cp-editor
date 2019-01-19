@@ -1,4 +1,4 @@
-margin = 0.2
+margin = 0.5
 
 FOLD = require 'fold'
 
@@ -87,7 +87,7 @@ class Editor
     svg.select('.V').each -> @stroke {color: '#0000ff', width: 0.1}
     svg.select('.B').each -> @stroke {color: '#000000', width: 0.1}
     svg.select('.C').each -> @stroke {color: '#ffff00', width: 0.1}
-    svg.select('circle').each -> @remove()
+    svg.select('.vertex').each -> @remove()
     svg.select('.drag').each -> @remove()
     svg = svg.svg()
     a = document.getElementById 'svglink'
