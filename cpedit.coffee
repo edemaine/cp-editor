@@ -19,6 +19,8 @@ class Editor
     .addClass 'crease'
     @vertexGroup = @svg.group()
     .addClass 'vertex'
+    @dragGroup = @svg.group()
+    .addClass 'drag'
     @updateGrid()
 
   updateGrid: ->
@@ -81,16 +83,12 @@ class Editor
   downloadSVG: ->
     svg = SVG tempSVG
     svg.svg @svg.svg()
-    svg.select '.M'
-    .each -> @stroke '#ff0000'
-    svg.select '.V'
-    .each -> @stroke '#0000ff'
-    svg.select '.B'
-    .each -> @stroke '#000000'
-    svg.select '.C'
-    .each -> @stroke '#ffff00'
-    svg.select 'circle'
-    .each -> @remove()
+    svg.select('.M').each -> @stroke {color: '#ff0000', width: 0.1}
+    svg.select('.V').each -> @stroke {color: '#0000ff', width: 0.1}
+    svg.select('.B').each -> @stroke {color: '#000000', width: 0.1}
+    svg.select('.C').each -> @stroke {color: '#ffff00', width: 0.1}
+    svg.select('circle').each -> @remove()
+    svg.select('.drag').each -> @remove()
     svg = svg.svg()
     a = document.getElementById 'svglink'
     a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
@@ -129,14 +127,11 @@ class LineDrawMode extends Mode
           @points.down = point
       @points[@which] = point
       unless @which < @circles.length
-        @circles.push(
-          svg.circle 0.3
-          .addClass 'drag'
-        )
+        @circles.push editor.dragGroup.circle 0.3
       @circles[@which].center @points[@which].x, @points[@which].y
       if @which == 1
-        @line ?= editor.creaseGroup.line().addClass 'drag'
-        @crease ?= editor.creaseGroup.line().addClass @lineType
+        @line ?= editor.dragGroup.line().addClass 'drag'
+        @crease ?= editor.dragGroup.line().addClass @lineType
         @line.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
         @crease.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
     svg.mousedown (e) =>

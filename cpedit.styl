@@ -40,12 +40,9 @@ line
   stroke: #dddddd
   stroke-width: 0.05
 
-.crease line
+.crease line, .drag line
   stroke-width: 0.1
 
-  &.drag
-    stroke: purple
-    stroke-width: 0.25
   &.B // boundary
     stroke: black
   &.M // mountain
@@ -57,5 +54,9 @@ line
   &.C // cut
     stroke: green
 
-circle.drag
+  &.drag
+    stroke: purple
+    stroke-width: 0.25
+
+.drag circle
   fill: purple
