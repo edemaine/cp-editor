@@ -41,7 +41,7 @@ class Editor
     @mode?.escape? @
 
   addVertex: (v) ->
-    i = FOLD.filter.addVertex @fold, [v.x, v.y], FOLD.geom.EPS
+    i = FOLD.filter.maybeAddVertex @fold, [v.x, v.y], FOLD.geom.EPS
     if i == @fold.vertices_coords.length - 1
       @vertexGroup.circle 0.2
       .center v.x, v.y
@@ -50,7 +50,7 @@ class Editor
     p1 = @addVertex p1
     p2 = @addVertex p2
     newVertices = @fold.vertices_coords.length
-    for e in FOLD.filter.addEdge @fold, p1, p2, FOLD.geom.EPS
+    for e in FOLD.filter.addEdgeAndSubdivide @fold, p1, p2, FOLD.geom.EPS
       @fold.edges_assignment[e] = assignment
       coords = (@fold.vertices_coords[v] for v in @fold.edges_vertices[e])
       @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
