@@ -9,18 +9,18 @@ html
   body
     div#menu
       .input
-        input#boundary(type='radio', name='mode', checked)
+        input#boundary(type='radio', name='mode', value='B', checked)
         label(for='boundary') Boundary
       .input
-        input#mountain(type='radio', name='mode')
+        input#mountain(type='radio', name='mode', value='M')
         label(for='mountain') Mountain
       .input
-        input#valley(type='radio', name='mode')
+        input#valley(type='radio', name='mode', value='V')
         label(for='valley') Valley
       .input
-        input#unfolded(type='radio', name='mode')
+        input#unfolded(type='radio', name='mode', value='U')
         label(for='unfolded') Unfolded
       .input
-        input#cut(type='radio', name='mode')
+        input#cut(type='radio', name='mode', value='C')
         label(for='cut') Cut
     div#interface

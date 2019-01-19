@@ -153,10 +153,10 @@ window?.onload = ->
   for input in document.getElementsByTagName 'input'
     do (input) ->
       if input.checked
-        editor.setMode new LineDrawMode input.id
+        editor.setMode new LineDrawMode input.value
       input.addEventListener 'change', (e) ->
         return unless e.target.checked
-        editor.setMode new LineDrawMode e.target.id
+        editor.setMode new LineDrawMode e.target.value
       input.parentElement.addEventListener 'click', ->
         input.click()
   window.addEventListener 'keyup', (e) =>
