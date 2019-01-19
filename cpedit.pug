@@ -9,18 +9,22 @@ html
   body
     div#menu
       .input
-        input#boundary(type='radio', name='mode', value='B', checked)
+        input#downloadFold(type='button', value='Download .fold')
+        a#foldlink
+      hr
+      .input
+        input#boundary.lineType(type='radio', name='mode', value='B', checked)
         label(for='boundary') Boundary (<code>b</code>)
       .input
-        input#mountain(type='radio', name='mode', value='M')
+        input#mountain.lineType(type='radio', name='mode', value='M')
         label(for='mountain') Mountain (<code>m</code>)
       .input
-        input#valley(type='radio', name='mode', value='V')
+        input#valley.lineType(type='radio', name='mode', value='V')
         label(for='valley') Valley (<code>v</code>)
       .input
-        input#unfolded(type='radio', name='mode', value='U')
+        input#unfolded.lineType(type='radio', name='mode', value='U')
         label(for='unfolded') Unfolded (<code>u</code>)
       .input
-        input#cut(type='radio', name='mode', value='C')
+        input#cut.lineType(type='radio', name='mode', value='C')
         label(for='cut') Cut (<code>c</code>)
     div#interface

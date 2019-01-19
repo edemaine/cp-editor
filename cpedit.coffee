@@ -58,10 +58,10 @@ class Editor
     for v in @fold.vertices_coords[newVertices..]
       @vertexGroup.circle 0.2
       .center ...v
-    console.log @fold
-    #@load @fold
+    #console.log @fold
+    #@loadFold @fold
 
-  load: (@fold) ->
+  loadFold: (@fold) ->
     @vertexGroup.clear()
     for v in @fold.vertices_coords
       @vertexGroup.circle 0.2
@@ -71,6 +71,12 @@ class Editor
       coords = (@fold.vertices_coords[v] for v in vs)
       @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
       .addClass @fold.edges_assignment[e]
+  downloadFold: ->
+    json = JSON.stringify @fold, null, '  '
+    a = document.getElementById 'foldlink'
+    a.href = URL.createObjectURL new Blob [json], type: "application/json"
+    a.download = 'creasepattern.fold'
+    a.click()
 
 class Mode
   enter: ->
@@ -150,7 +156,7 @@ class LineDrawMode extends Mode
 window?.onload = ->
   svg = SVG 'interface'
   editor = new Editor svg
-  for input in document.getElementsByTagName 'input'
+  for input in document.getElementsByClassName 'lineType'
     do (input) ->
       if input.checked
         editor.setMode new LineDrawMode input.value
@@ -173,3 +179,5 @@ window?.onload = ->
         document.getElementById('cut').click()
       when 'Escape'
         editor.escape()
+  document.getElementById('downloadFold').addEventListener 'click', ->
+    editor.downloadFold()
