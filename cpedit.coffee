@@ -17,8 +17,10 @@ class Editor
     .addClass 'grid'
     @creaseGroup = @svg.group()
     .addClass 'crease'
+    @creaseLine = {}
     @vertexGroup = @svg.group()
     .addClass 'vertex'
+    @vertexCircle = {}
     @dragGroup = @svg.group()
     .addClass 'drag'
     @updateGrid()
@@ -43,42 +45,44 @@ class Editor
     @mode?.escape? @
 
   addVertex: (v) ->
-    i = FOLD.filter.maybeAddVertex @fold, [v.x, v.y], FOLD.geom.EPS
-    if i == @fold.vertices_coords.length - 1
-      @vertexGroup.circle 0.2
-      .center v.x, v.y
+    [i, changedEdges] =
+      FOLD.filter.addVertexAndSubdivide @fold, [v.x, v.y], FOLD.geom.EPS
+    @drawVertex i if i == @fold.vertices_coords.length - 1  # new vertex
+    @drawEdge e for e in changedEdges
     i
   addCrease: (p1, p2, assignment) ->
     p1 = @addVertex p1
     p2 = @addVertex p2
     newVertices = @fold.vertices_coords.length
-    for e in FOLD.filter.addEdgeAndSubdivide @fold, p1, p2, FOLD.geom.EPS
+    changedEdges = FOLD.filter.addEdgeAndSubdivide @fold, p1, p2, FOLD.geom.EPS
+    for e in changedEdges[0]
       @fold.edges_assignment[e] = assignment
-      coords = (@fold.vertices_coords[v] for v in @fold.edges_vertices[e])
-      @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
-      .addClass assignment
-    for v in @fold.vertices_coords[newVertices..]
-      @vertexGroup.circle 0.2
-      .center ...v
-    #console.log @fold
-    #@loadFold @fold
+    @drawEdge e for e in changedEdges[i] for i in [0, 1]
+    @drawVertex v for v in [newVertices ... @fold.vertices_coords.length]
+    console.log @fold
+    #@loadCP @fold
 
-  loadFold: (@fold) ->
+  loadCP: (@fold) ->
     @vertexGroup.clear()
-    for v in @fold.vertices_coords
-      @vertexGroup.circle 0.2
-      .center ...v
+    @drawVertex v for v in [0...@fold.vertices_coords.length]
     @creaseGroup.clear()
-    for vs, e in @fold.edges_vertices
-      coords = (@fold.vertices_coords[v] for v in vs)
-      @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
-      .addClass @fold.edges_assignment[e]
+    @drawEdge v for v in [0...@fold.edges_vertices.length]
+  drawVertex: (v) ->
+    @vertexCircle[v]?.remove()
+    @vertexCircle[v] = @vertexGroup.circle 0.2
+    .center ...(@fold.vertices_coords[v])
+  drawEdge: (e) ->
+    @creaseLine[e]?.remove()
+    coords = (@fold.vertices_coords[v] for v in @fold.edges_vertices[e])
+    @creaseLine[e] =
+    @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
+    .addClass @fold.edges_assignment[e]
 
-  downloadFold: ->
+  downloadCP: ->
     json = FOLD.convert.toJSON @fold
-    a = document.getElementById 'foldlink'
+    a = document.getElementById 'cplink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
-    a.download = 'creasepattern.fold'
+    a.download = 'creasepattern.cp'
     a.click()
   downloadSVG: ->
     svg = SVG tempSVG
@@ -192,7 +196,16 @@ window?.onload = ->
         document.getElementById('cut').click()
       when 'Escape'
         editor.escape()
-  document.getElementById('downloadFold').addEventListener 'click', ->
-    editor.downloadFold()
+  document.getElementById('loadCP').addEventListener 'click', ->
+    document.getElementById('fileCP').click()
+  document.getElementById('fileCP').addEventListener 'change', (e) ->
+    return unless e.target.files.length
+    file = e.target.files[0]
+    reader = new FileReader
+    reader.onload = ->
+      editor.loadCP JSON.parse reader.result
+    reader.readAsText file
+  document.getElementById('downloadCP').addEventListener 'click', ->
+    editor.downloadCP()
   document.getElementById('downloadSVG').addEventListener 'click', ->
     editor.downloadSVG()

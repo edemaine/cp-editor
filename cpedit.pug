@@ -9,8 +9,11 @@ html
   body
     div#menu
       .input
-        input#downloadFold(type='button', value='Save .fold', title='For reloading and all software supporting .fold, including Freeform Origami and Origami Simulator')
-        a#foldlink
+        input#loadCP(type='button', value='Load .cp', title='Load previously saved .cp file')
+        input#fileCP(type='file', style='display: none')
+      .input
+        input#downloadCP(type='button', value='Save .cp', title='For reloading with this editor (weird .fold-like format)')
+        a#cplink
       .input
         input#downloadSVG(type='button', value='Export .svg', title='For Origami Simulator or paper figures')
         a#svglink
