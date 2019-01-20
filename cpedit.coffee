@@ -10,6 +10,10 @@ class Editor
       xMax: 4
       yMax: 4
     @fold =
+      file_spec: 1.1
+      file_creator: 'Crease Pattern Editor'
+      file_classes: ['singleModel']
+      frame_classes: ['creasePattern']
       vertices_coords: []
       edges_vertices: []
       edges_assignment: []
@@ -83,6 +87,21 @@ class Editor
     a = document.getElementById 'cplink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = 'creasepattern.cp'
+    a.click()
+  downloadFold: ->
+    ## Add face structure to @fold
+    fold = FOLD.convert.deepCopy @fold
+    FOLD.convert.edges_vertices_to_vertices_edges_sorted fold
+    FOLD.filter.cutEdges fold, FOLD.filter.edgesAssigned fold, 'C'
+    console.log 'cut', fold
+    FOLD.convert.vertices_edges_to_faces_vertices_edges fold
+    console.log fold
+    
+    ## Export and download
+    json = FOLD.convert.toJSON fold
+    a = document.getElementById 'foldlink'
+    a.href = URL.createObjectURL new Blob [json], type: "application/json"
+    a.download = 'creasepattern.fold'
     a.click()
   downloadSVG: ->
     svg = SVG tempSVG
@@ -211,5 +230,7 @@ window?.onload = ->
     reader.readAsText file
   document.getElementById('downloadCP').addEventListener 'click', ->
     editor.downloadCP()
+  document.getElementById('downloadFold').addEventListener 'click', ->
+    editor.downloadFold()
   document.getElementById('downloadSVG').addEventListener 'click', ->
     editor.downloadSVG()
