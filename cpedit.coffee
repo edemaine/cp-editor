@@ -225,6 +225,7 @@ class VertexMoveMode extends Mode
       @vertex = parseInt e.target.getAttribute 'data-index'
       if e.target.tagName == 'circle' and @vertex?
         @circle = SVG.get e.target.id
+        .addClass 'drag'
         @down = null # special value meaning 'set'
         move e
       else
@@ -243,6 +244,14 @@ class VertexMoveMode extends Mode
           #for vertices, edge in editor.fold.edges_vertices
           #  editor.drawEdge edge if @vertex in vertices
         @escape editor
+    svg.mouseover (e) =>
+      return if @vertex?
+      return unless e.target.tagName == 'circle' and e.target.getAttribute 'data-index'
+      SVG.get(e.target.id).addClass 'drag'
+    svg.mouseout (e) =>
+      return unless e.target.tagName == 'circle' and e.target.getAttribute 'data-index'
+      return if @vertex == parseInt e.target.getAttribute 'data-index'
+      SVG.get(e.target.id).removeClass 'drag'
     #svg.mouseenter (e) =>
     #  ## Cancel crease if user exits, lets go of button, and re-enters
     #  @escape editor if @dragging and e.buttons == 0
@@ -252,6 +261,7 @@ class VertexMoveMode extends Mode
     #    @circles.pop().remove()
   escape: (editor) ->
     if @vertex?
+      @circle.removeClass 'drag'
       @point =
         x: editor.fold.vertices_coords[@vertex][0]
         y: editor.fold.vertices_coords[@vertex][1]
