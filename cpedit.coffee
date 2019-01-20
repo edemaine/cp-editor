@@ -106,6 +106,7 @@ class Mode
     .mousedown null
     .mouseup null
     .mouseenter null
+    .mouseleave null
 
 class LineDrawMode extends Mode
   constructor: (@lineType) ->
@@ -158,6 +159,9 @@ class LineDrawMode extends Mode
       ## Cancel crease if user exits, lets go of button, and re-enters
       @escape editor if @dragging and e.buttons == 0
       move e
+    svg.mouseleave (e) =>
+      if @circles.length == @which + 1
+        @circles.pop().remove()
   escape: (editor) ->
     @circles.pop().remove() while @circles.length
     @crease?.remove()
