@@ -350,13 +350,13 @@ window?.onload = ->
         document.getElementById('drawLine').click()
       when 'a', 'A'
         document.getElementById('assignLine').click()
-      when 'm', 'M'
+      when 'm'
         document.getElementById('moveVertex').click()
       when 'b', 'B'
         document.getElementById('boundary').click()
-      when 'm', 'M'
+      when 'M'
         document.getElementById('mountain').click()
-      when 'v', 'V'
+      when 'V'
         document.getElementById('valley').click()
       when 'u', 'U'
         document.getElementById('unfolded').click()
