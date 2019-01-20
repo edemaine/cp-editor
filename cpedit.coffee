@@ -299,6 +299,9 @@ class VertexMoveMode extends Mode
   exit: (editor) ->
     @escape editor
     editor.svg
+    .select '.vertex circle.drag'
+    .each -> @removeClass 'drag'
+    editor.svg
     .mousemove null
     .mousedown null
     .mouseup null
