@@ -4,6 +4,8 @@ FOLD = require 'fold'
 
 class Editor
   constructor: (@svg) ->
+    @undoStack = []
+    @redoStack = []
     @page =
       xMin: 0
       yMin: 0
@@ -69,6 +71,20 @@ class Editor
   subdivide: ->
     FOLD.filter.collapseNearbyVertices @fold, FOLD.geom.EPS
     FOLD.filter.subdivideCrossingEdges_vertices @fold, FOLD.geom.EPS
+    @loadCP @fold
+
+  saveForUndo: ->
+    @undoStack.push FOLD.convert.deepCopy @fold
+    @redoStack = []
+  undo: ->
+    return unless @undoStack.length
+    @redoStack.push @fold
+    @fold = @undoStack.pop()
+    @loadCP @fold
+  redo: ->
+    return unless @redoStack.length
+    @undoStack.push @fold
+    @fold = @redoStack.pop()
     @loadCP @fold
 
   loadCP: (@fold) ->
@@ -169,6 +185,7 @@ class LineDrawMode extends Mode
         ## Commit new crease, unless it's zero length.
         unless @points[0].x == @points[1].x and
                @points[0].y == @points[1].y
+          editor.saveForUndo()
           editor.addCrease @points[0], @points[1], editor.lineType
         @escape editor
         move e
@@ -206,7 +223,9 @@ class LineAssignMode extends Mode
       return unless e.target.tagName == 'line'
       edge = e.target.getAttribute 'data-index'
       return unless edge
-      editor.fold.edges_assignment[edge] = editor.lineType
+      unless editor.fold.edges_assignment[edge] == editor.lineType
+        editor.saveForUndo()
+        editor.fold.edges_assignment[edge] = editor.lineType
       editor.drawEdge edge
     svg.mouseover change  # painting
   exit: (editor) ->
@@ -236,6 +255,7 @@ class VertexMoveMode extends Mode
         ## Commit new location
         unless @point.x == editor.fold.vertices_coords[@vertex][0] and
                @point.y == editor.fold.vertices_coords[@vertex][1]
+          editor.saveForUndo()
           editor.fold.vertices_coords[@vertex][0] = @point.x
           editor.fold.vertices_coords[@vertex][1] = @point.y
           @vertex = null
@@ -335,6 +355,14 @@ window?.onload = ->
         document.getElementById('cut').click()
       when 'Escape'
         editor.escape()
+      when 'z'
+        editor.undo()
+      when 'y', 'Z'
+        editor.redo()
+  document.getElementById('undo').addEventListener 'click', ->
+    editor.undo()
+  document.getElementById('redo').addEventListener 'click', ->
+    editor.redo()
   document.getElementById('loadCP').addEventListener 'click', (e) ->
     e.stopPropagation()
     document.getElementById('fileCP').click()

@@ -22,6 +22,11 @@ html
         a#svglink
       hr
       .input
+        input#undo(type='button', value='Undo', title='Shortcut: z or ctrl-z')
+      .input
+        input#redo(type='button', value='Redo', title='Shortcut: y or shift-z or ctrl-y or ctrl-shift-z')
+      hr
+      .input
         input#drawLine(type='radio', name='mode', checked)
         label(for='drawLine') Draw Line (<code>d</code>)
       .input
