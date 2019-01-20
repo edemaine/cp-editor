@@ -40,8 +40,19 @@ class Editor
     @svg.viewbox @page.xMin - margin, @page.yMin - margin, @page.xMax - @page.xMin + 2*margin, @page.yMax - @page.yMin + 2*margin
 
   nearestFeature: (pt) ->
-    x: Math.max @page.xMin, Math.min @page.xMax, Math.round pt.x
-    y: Math.max @page.yMin, Math.min @page.yMax, Math.round pt.y
+    p = [pt.x, pt.y]
+    closest =
+      [
+        Math.max @page.xMin, Math.min @page.xMax, Math.round pt.x
+        Math.max @page.yMin, Math.min @page.yMax, Math.round pt.y
+      ]
+    v = FOLD.geom.closestIndex p, @fold.vertices_coords
+    if v?
+      vertex = @fold.vertices_coords[v]
+      if FOLD.geom.dist(vertex, p) < FOLD.geom.dist(closest, p)
+        closest = vertex
+    x: closest[0]
+    y: closest[1]
 
   setMode: (mode) ->
     @mode?.exit @
