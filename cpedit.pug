@@ -22,19 +22,30 @@ html
         a#svglink
       hr
       .input
-        input#boundary.lineType(type='radio', name='mode', value='B', checked)
+        input#drawLine(type='radio', name='mode', checked)
+        label(for='drawLine') Draw Line (<code>d</code>)
+      .input
+        input#assignLine(type='radio', name='mode')
+        label(for='assignLine') Assign Line (<code>a</code>)
+      //-
+        .input
+          input#moveVertex(type='radio', name='mode')
+          label(for='moveVertex') Move Vertex (<code>m</code>)
+      hr
+      .input
+        input#boundary(type='radio', name='line', value='B', checked)
         label(for='boundary') Boundary (<code>b</code>)
       .input
-        input#mountain.lineType(type='radio', name='mode', value='M')
+        input#mountain(type='radio', name='line', value='M')
         label(for='mountain') Mountain (<code>m</code>)
       .input
-        input#valley.lineType(type='radio', name='mode', value='V')
+        input#valley(type='radio', name='line', value='V')
         label(for='valley') Valley (<code>v</code>)
       .input
-        input#unfolded.lineType(type='radio', name='mode', value='U')
+        input#unfolded(type='radio', name='line', value='U')
         label(for='unfolded') Unfolded (<code>u</code>)
       .input
-        input#cut.lineType(type='radio', name='mode', value='C')
+        input#cut(type='radio', name='line', value='C')
         label(for='cut') Cut (<code>c</code>)
     div#interface
     div#tempSVG(style='display: none')

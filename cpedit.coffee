@@ -45,6 +45,7 @@ class Editor
     @mode?.exit @
     @mode = mode
     @mode.enter @
+  setLineType: (@lineType) ->
   escape: ->
     @mode?.escape? @
 
@@ -63,14 +64,16 @@ class Editor
       @fold.edges_assignment[e] = assignment
     @drawEdge e for e in changedEdges[i] for i in [0, 1]
     @drawVertex v for v in [newVertices ... @fold.vertices_coords.length]
-    console.log @fold
+    #console.log @fold
     #@loadCP @fold
 
   loadCP: (@fold) ->
+    @mode.exit @
     @vertexGroup.clear()
     @drawVertex v for v in [0...@fold.vertices_coords.length]
     @creaseGroup.clear()
     @drawEdge v for v in [0...@fold.edges_vertices.length]
+    @mode.enter @
   drawVertex: (v) ->
     @vertexCircle[v]?.remove()
     @vertexCircle[v] = @vertexGroup.circle 0.2
@@ -81,6 +84,7 @@ class Editor
     @creaseLine[e] =
     @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
     .addClass @fold.edges_assignment[e]
+    .attr 'data-index', e
 
   downloadCP: ->
     json = FOLD.convert.toJSON @fold
@@ -93,9 +97,9 @@ class Editor
     fold = FOLD.convert.deepCopy @fold
     FOLD.convert.edges_vertices_to_vertices_edges_sorted fold
     FOLD.filter.cutEdges fold, FOLD.filter.edgesAssigned fold, 'C'
-    console.log 'cut', fold
+    #console.log 'cut', fold
     FOLD.convert.vertices_edges_to_faces_vertices_edges fold
-    console.log fold
+    #console.log fold
     
     ## Export and download
     json = FOLD.convert.toJSON fold
@@ -118,18 +122,8 @@ class Editor
     a.click()
 
 class Mode
-  enter: ->
-  exit: (editor) ->
-    editor.svg
-    .mousemove null
-    .mousedown null
-    .mouseup null
-    .mouseenter null
-    .mouseleave null
 
 class LineDrawMode extends Mode
-  constructor: (@lineType) ->
-    super()
   enter: (editor) ->
     svg = editor.svg
     @which = 0 ## 0 = first point, 1 = second point
@@ -154,7 +148,7 @@ class LineDrawMode extends Mode
       @circles[@which].center @points[@which].x, @points[@which].y
       if @which == 1
         @line ?= editor.dragGroup.line().addClass 'drag'
-        @crease ?= editor.dragGroup.line().addClass @lineType
+        @crease ?= editor.dragGroup.line().addClass editor.lineType
         @line.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
         @crease.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
     svg.mousedown (e) =>
@@ -170,8 +164,7 @@ class LineDrawMode extends Mode
         ## Commit new crease, unless it's zero length.
         unless @points[0].x == @points[1].x and
                @points[0].y == @points[1].y
-          editor.addCrease @points[0], @points[1], @lineType
-          @crease = null  # prevent removal in @escape
+          editor.addCrease @points[0], @points[1], editor.lineType
         @escape editor
         move e
     svg.mouseenter (e) =>
@@ -190,23 +183,66 @@ class LineDrawMode extends Mode
     @dragging = false
     @points.down = undefined
   exit: (editor) ->
-    super editor
     @escape editor
+    editor.svg
+    .mousemove null
+    .mousedown null
+    .mouseup null
+    .mouseenter null
+    .mouseleave null
+
+class LineAssignMode extends Mode
+  enter: (editor) ->
+    svg = editor.svg
+    console.log svg
+    svg.mousedown change = (e) =>
+      return unless e.buttons
+      console.log e.target, e.target.tagName, e.target.getAttribute 'data-index'
+      return unless e.target.tagName == 'line'
+      edge = e.target.getAttribute 'data-index'
+      return unless edge
+      editor.fold.edges_assignment[edge] = editor.lineType
+      editor.drawEdge edge
+    svg.mouseover change  # painting
+  exit: (editor) ->
+    editor.svg
+    .mousedown null
+    .mouseover null
+
+modes =
+  drawLine: new LineDrawMode
+  assignLine: new LineAssignMode
 
 window?.onload = ->
   svg = SVG 'interface'
   editor = new Editor svg
-  for input in document.getElementsByClassName 'lineType'
+  for input in document.getElementsByTagName 'input'
     do (input) ->
-      if input.checked
-        editor.setMode new LineDrawMode input.value
-      input.addEventListener 'change', (e) ->
-        return unless e.target.checked
-        editor.setMode new LineDrawMode e.target.value
+      switch input.getAttribute 'name'
+        when 'mode'
+          if input.checked
+            editor.setMode modes[input.id]
+          input.addEventListener 'change', (e) ->
+            return unless input.checked
+            if input.id of modes
+              editor.setMode modes[input.id]
+            else
+              console.warn "Unrecognized mode #{input.id}"
+        when 'line'
+          if input.checked
+            editor.setLineType input.value
+          input.addEventListener 'change', (e) ->
+            return unless input.checked
+            editor.setLineType input.value
       input.parentElement.addEventListener 'click', ->
         input.click()
   window.addEventListener 'keyup', (e) =>
     switch e.key
+      when 'd', 'D'
+        document.getElementById('drawLine').click()
+      when 'a', 'A'
+        document.getElementById('assignLine').click()
+      #when 'm', 'M'
       when 'b', 'B'
         document.getElementById('boundary').click()
       when 'm', 'M'
@@ -219,7 +255,8 @@ window?.onload = ->
         document.getElementById('cut').click()
       when 'Escape'
         editor.escape()
-  document.getElementById('loadCP').addEventListener 'click', ->
+  document.getElementById('loadCP').addEventListener 'click', (e) ->
+    e.stopPropagation()
     document.getElementById('fileCP').click()
   document.getElementById('fileCP').addEventListener 'change', (e) ->
     return unless e.target.files.length
