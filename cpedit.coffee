@@ -227,10 +227,8 @@ class LineDrawMode extends Mode
 class LineAssignMode extends Mode
   enter: (editor) ->
     svg = editor.svg
-    console.log svg
     svg.mousedown change = (e) =>
       return unless e.buttons
-      console.log e.target, e.target.tagName, e.target.getAttribute 'data-index'
       return unless e.target.tagName == 'line'
       edge = e.target.getAttribute 'data-index'
       return unless edge
