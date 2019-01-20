@@ -372,13 +372,16 @@ window?.onload = ->
       when 'y', 'Z'
         editor.redo()
   document.getElementById('undo').addEventListener 'click', ->
+    e.stopPropagation()
     editor.undo()
   document.getElementById('redo').addEventListener 'click', ->
+    e.stopPropagation()
     editor.redo()
   document.getElementById('loadCP').addEventListener 'click', (e) ->
     e.stopPropagation()
     document.getElementById('fileCP').click()
   document.getElementById('fileCP').addEventListener 'change', (e) ->
+    e.stopPropagation()
     return unless e.target.files.length
     file = e.target.files[0]
     reader = new FileReader
@@ -386,8 +389,11 @@ window?.onload = ->
       editor.loadCP JSON.parse reader.result
     reader.readAsText file
   document.getElementById('downloadCP').addEventListener 'click', ->
+    e.stopPropagation()
     editor.downloadCP()
   document.getElementById('downloadFold').addEventListener 'click', ->
+    e.stopPropagation()
     editor.downloadFold()
   document.getElementById('downloadSVG').addEventListener 'click', ->
+    e.stopPropagation()
     editor.downloadSVG()
