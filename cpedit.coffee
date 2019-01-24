@@ -371,10 +371,10 @@ window?.onload = ->
         editor.undo()
       when 'y', 'Z'
         editor.redo()
-  document.getElementById('undo').addEventListener 'click', ->
+  document.getElementById('undo').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.undo()
-  document.getElementById('redo').addEventListener 'click', ->
+  document.getElementById('redo').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.redo()
   document.getElementById('loadCP').addEventListener 'click', (e) ->
@@ -388,12 +388,12 @@ window?.onload = ->
     reader.onload = ->
       editor.loadCP JSON.parse reader.result
     reader.readAsText file
-  document.getElementById('downloadCP').addEventListener 'click', ->
+  document.getElementById('downloadCP').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.downloadCP()
-  document.getElementById('downloadFold').addEventListener 'click', ->
+  document.getElementById('downloadFold').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.downloadFold()
-  document.getElementById('downloadSVG').addEventListener 'click', ->
+  document.getElementById('downloadSVG').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.downloadSVG()
