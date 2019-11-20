@@ -6,6 +6,7 @@ class Editor
   constructor: (@svg) ->
     @undoStack = []
     @redoStack = []
+    @updateUndoStack()
     @page =
       xMin: 0
       yMin: 0
@@ -87,16 +88,22 @@ class Editor
   saveForUndo: ->
     @undoStack.push FOLD.convert.deepCopy @fold
     @redoStack = []
+    @updateUndoStack()
   undo: ->
     return unless @undoStack.length
     @redoStack.push @fold
     @fold = @undoStack.pop()
     @loadCP @fold
+    @updateUndoStack()
   redo: ->
     return unless @redoStack.length
     @undoStack.push @fold
     @fold = @redoStack.pop()
     @loadCP @fold
+    @updateUndoStack()
+  updateUndoStack: ->
+    document.getElementById('undo')?.disabled = (@undoStack.length == 0)
+    document.getElementById('redo')?.disabled = (@redoStack.length == 0)
 
   loadCP: (@fold) ->
     @mode.exit @
