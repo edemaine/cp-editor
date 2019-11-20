@@ -1,4 +1,9 @@
 margin = 0.5
+defaultPage = ->
+  xMin: 0
+  yMin: 0
+  xMax: 4
+  yMax: 4
 
 FOLD = require 'fold'
 
@@ -7,11 +12,6 @@ class Editor
     @undoStack = []
     @redoStack = []
     @updateUndoStack()
-    @page =
-      xMin: 0
-      yMin: 0
-      xMax: 4
-      yMax: 4
     @fold =
       file_spec: 1.1
       file_creator: 'Crease Pattern Editor'
@@ -20,6 +20,7 @@ class Editor
       vertices_coords: []
       edges_vertices: []
       edges_assignment: []
+      "cpedit:page": defaultPage()
     @gridGroup = @svg.group()
     .addClass 'grid'
     @creaseGroup = @svg.group()
@@ -33,19 +34,24 @@ class Editor
     @updateGrid()
 
   updateGrid: ->
+    # Call whenever page dimensions change
+    page = @fold["cpedit:page"]
+    document.getElementById('width')?.innerHTML = page.xMax
+    document.getElementById('height')?.innerHTML = page.yMax
     @gridGroup.clear()
-    for x in [0..@page.xMax]
-      @gridGroup.line x, @page.yMin, x, @page.yMax
-    for y in [0..@page.yMax]
-      @gridGroup.line @page.xMin, y, @page.xMax, y
-    @svg.viewbox @page.xMin - margin, @page.yMin - margin, @page.xMax - @page.xMin + 2*margin, @page.yMax - @page.yMin + 2*margin
+    for x in [0..page.xMax]
+      @gridGroup.line x, page.yMin, x, page.yMax
+    for y in [0..page.yMax]
+      @gridGroup.line page.xMin, y, page.xMax, y
+    @svg.viewbox page.xMin - margin, page.yMin - margin, page.xMax - page.xMin + 2*margin, page.yMax - page.yMin + 2*margin
 
   nearestFeature: (pt) ->
     p = [pt.x, pt.y]
+    page = @fold["cpedit:page"]
     closest =
       [
-        Math.max @page.xMin, Math.min @page.xMax, Math.round pt.x
-        Math.max @page.yMin, Math.min @page.yMax, Math.round pt.y
+        Math.max page.xMin, Math.min page.xMax, Math.round pt.x
+        Math.max page.yMin, Math.min page.yMax, Math.round pt.y
       ]
     v = FOLD.geom.closestIndex p, @fold.vertices_coords
     if v?
@@ -111,6 +117,15 @@ class Editor
     @drawVertex v for v in [0...@fold.vertices_coords.length]
     @creaseGroup.clear()
     @drawEdge v for v in [0...@fold.edges_vertices.length]
+    @fold["cpedit:page"] ?=
+      if @fold.vertices_coords?.length
+        xMin: Math.min ...(v[0] for v in @fold.vertices_coords)
+        yMin: Math.min ...(v[1] for v in @fold.vertices_coords)
+        xMax: Math.max ...(v[0] for v in @fold.vertices_coords)
+        yMax: Math.max ...(v[1] for v in @fold.vertices_coords)
+      else
+        defaultPage()
+    @updateGrid()
     @mode.enter @
   drawVertex: (v) ->
     @vertexCircle[v]?.remove()
@@ -404,3 +419,11 @@ window?.onload = ->
   document.getElementById('downloadSVG').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.downloadSVG()
+  for [size, dim] in [['width', 'x'], ['height', 'y']]
+    for [delta, op] in [[-1, 'Dec'], [+1, 'Inc']]
+      do (size, dim, delta, op) ->
+        document.getElementById(size+op).addEventListener 'click', (e) ->
+          e.stopPropagation()
+          editor.saveForUndo()
+          editor.fold["cpedit:page"][dim + 'Max'] += delta
+          editor.updateGrid()

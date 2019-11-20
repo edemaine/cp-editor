@@ -20,6 +20,16 @@ html
       .input
         input#downloadSVG(type='button', value='Export .svg', title='For Origami Simulator or paper figures')
         a#svglink
+      .multinput
+        label Width
+        span.number#width 4
+        button#widthDec &minus;
+        button#widthInc +
+      .multinput
+        label Height
+        span.number#height 4
+        button#heightDec &minus;
+        button#heightInc +
       hr
       .input
         input#undo(type='button', value='Undo', title='Shortcut: z or ctrl-z')

@@ -19,7 +19,7 @@ body
 #interface
   flex: 1
 
-.input
+.input, .multinput
   font-size: large
   input
     font-size: large
@@ -32,12 +32,18 @@ body
     color: yellow
     background: gray
 
-  label
+  label, span
     display: block
     flex: 1
 
   input[type='button']
     width: 100%
+
+.input, .input button, .input input, .input label, .multinput button
+  cursor: pointer
+
+.number
+  text-align: center
 
 // Drawing style
 
