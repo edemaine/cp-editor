@@ -8,57 +8,59 @@ html
       include:stylus cpedit.styl
   body
     div#menu
-      .input
+      .input.clickable
         input#loadCP(type='button', value='Load .cp', title='Load previously saved .cp file')
         input#fileCP(type='file', style='display: none')
-      .input
+      .input.clickable
         input#downloadCP(type='button', value='Save .cp', title='For reloading with this editor (weird .fold-like format)')
         a#cplink
-      .input
+      .input.clickable
         input#downloadFold(type='button', value='Export .fold', title='For all software supporting .fold, including Freeform Origami and Origami Simulator')
         a#foldlink
-      .input
+      .input.clickable
         input#downloadSVG(type='button', value='Export .svg', title='For Origami Simulator or paper figures')
         a#svglink
-      .multinput
+      .input
+        input#title(type='text', placeholder='Title')
+      .input
         label Width
         span.number#width 4
         button#widthDec &minus;
         button#widthInc +
-      .multinput
+      .input
         label Height
         span.number#height 4
         button#heightDec &minus;
         button#heightInc +
       hr
-      .input
+      .input.clickable
         input#undo(type='button', value='Undo', title='Shortcut: z or ctrl-z')
-      .input
+      .input.clickable
         input#redo(type='button', value='Redo', title='Shortcut: y or shift-z or ctrl-y or ctrl-shift-z')
       hr
-      .input
+      .input.clickable
         input#drawLine(type='radio', name='mode', checked)
         label(for='drawLine') Draw Line (<code>d</code>)
-      .input
+      .input.clickable
         input#assignLine(type='radio', name='mode')
         label(for='assignLine') Assign Line (<code>a</code>)
-      .input
+      .input.clickable
         input#moveVertex(type='radio', name='mode')
         label(for='moveVertex') Move Vertex (<code>m</code>)
       hr
-      .input
+      .input.clickable
         input#boundary(type='radio', name='line', value='B', checked)
         label(for='boundary') Boundary (<code>B</code>)
-      .input
+      .input.clickable
         input#mountain(type='radio', name='line', value='M')
         label(for='mountain') Mountain (<code>M</code>)
-      .input
+      .input.clickable
         input#valley(type='radio', name='line', value='V')
         label(for='valley') Valley (<code>V</code>)
-      .input
+      .input.clickable
         input#unfolded(type='radio', name='line', value='U')
         label(for='unfolded') Unfolded (<code>U</code>)
-      .input
+      .input.clickable
         input#cut(type='radio', name='line', value='C')
         label(for='cut') Cut (<code>C</code>)
     div#interface

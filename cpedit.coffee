@@ -61,6 +61,9 @@ class Editor
     x: closest[0]
     y: closest[1]
 
+  setTitle: (title) ->
+    @fold['file_title'] = title
+
   setMode: (mode) ->
     @mode?.exit @
     @mode = mode
@@ -126,6 +129,7 @@ class Editor
       else
         defaultPage()
     @updateGrid()
+    document.getElementById('title').value = @fold.file_title ? ''
     @mode.enter @
   drawVertex: (v) ->
     @vertexCircle[v]?.remove()
@@ -144,7 +148,7 @@ class Editor
     json = FOLD.convert.toJSON @fold
     a = document.getElementById 'cplink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
-    a.download = 'creasepattern.cp'
+    a.download = (@fold.file_title or 'creasepattern') + '.cp'
     a.click()
   downloadFold: ->
     ## Add face structure to @fold
@@ -159,7 +163,7 @@ class Editor
     json = FOLD.convert.toJSON fold
     a = document.getElementById 'foldlink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
-    a.download = 'creasepattern.fold'
+    a.download = (@fold.file_title or 'creasepattern') + '.fold'
     a.click()
   downloadSVG: ->
     svg = SVG tempSVG
@@ -172,7 +176,7 @@ class Editor
     svg = svg.svg()
     a = document.getElementById 'svglink'
     a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
-    a.download = 'creasepattern.svg'
+    a.download = (@fold.file_title or 'creasepattern') + '.svg'
     a.click()
 
 class Mode
@@ -427,3 +431,5 @@ window?.onload = ->
           editor.saveForUndo()
           editor.fold["cpedit:page"][dim + 'Max'] += delta
           editor.updateGrid()
+  document.getElementById('title').addEventListener 'input', (e) ->
+    editor.setTitle document.getElementById('title').value
