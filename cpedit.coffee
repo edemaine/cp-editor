@@ -406,7 +406,7 @@ window?.onload = ->
   document.getElementById('loadCP').addEventListener 'click', (e) ->
     e.stopPropagation()
     document.getElementById('fileCP').click()
-  document.getElementById('fileCP').addEventListener 'change', (e) ->
+  document.getElementById('fileCP').addEventListener 'input', (e) ->
     e.stopPropagation()
     return unless e.target.files.length
     file = e.target.files[0]
