@@ -114,6 +114,27 @@ class Editor
     document.getElementById('undo')?.disabled = (@undoStack.length == 0)
     document.getElementById('redo')?.disabled = (@redoStack.length == 0)
 
+  transform: (matrix) ->
+    @saveForUndo()
+    FOLD.filter.transform @fold, matrix
+    @loadCP @fold
+  reflectX: ->
+    {xMin, xMax} = @fold['cpedit:page']
+    @transform FOLD.geom.matrixReflectAxis 0, 2, (xMin + xMax) / 2
+  reflectY: ->
+    {yMin, yMax} = @fold['cpedit:page']
+    @transform FOLD.geom.matrixReflectAxis 1, 2, (yMin + yMax) / 2
+  rotate90: (cw) ->
+    {xMin, xMax, yMin, yMax} = @fold['cpedit:page']
+    if cw
+      angle = Math.PI/2
+    else
+      angle = -Math.PI/2
+    @transform FOLD.geom.matrixRotate2D angle,
+      [(xMin + xMax) / 2, (yMin + yMax) / 2]
+  rotateCW: -> @rotate90 true
+  rotateCCW: -> @rotate90 false
+
   loadCP: (@fold) ->
     @mode.exit @
     @vertexGroup.clear()
@@ -397,12 +418,11 @@ window?.onload = ->
         editor.undo()
       when 'y', 'Z'
         editor.redo()
-  document.getElementById('undo').addEventListener 'click', (e) ->
-    e.stopPropagation()
-    editor.undo()
-  document.getElementById('redo').addEventListener 'click', (e) ->
-    e.stopPropagation()
-    editor.redo()
+  for id in ['undo', 'redo', 'reflectX', 'reflectY', 'rotateCCW', 'rotateCW']
+    do (id) ->
+      document.getElementById(id).addEventListener 'click', (e) ->
+        e.stopPropagation()
+        editor[id]()
   document.getElementById('loadCP').addEventListener 'click', (e) ->
     e.stopPropagation()
     document.getElementById('fileCP').click()

@@ -1,5 +1,6 @@
 html
   head
+    meta(charset="utf-8")
     title Crease Pattern Editor
     script(src='node_modules/svg.js/dist/svg.min.js')
     script(src='node_modules/fold/dist/fold.js')
@@ -32,6 +33,12 @@ html
         span.number#height 4
         button#heightDec &minus;
         button#heightInc +
+      .input
+        label Transform:
+        button#reflectX(title="Reflect horizontally") ⇹
+        button#reflectY(title="Reflect vertically") ↕
+        button#rotateCCW(title="Rotate 90° counterclockwise") ⟲
+        button#rotateCW(title="Rotate 90° clockwise") ⟳
       hr
       .input.clickable
         input#undo(type='button', value='Undo', title='Shortcut: z or ctrl-z')
