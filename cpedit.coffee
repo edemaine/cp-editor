@@ -114,9 +114,19 @@ class Editor
     document.getElementById('undo')?.disabled = (@undoStack.length == 0)
     document.getElementById('redo')?.disabled = (@redoStack.length == 0)
 
-  transform: (matrix) ->
+  transform: (matrix, integerize = true) ->
+    ###
+    Main transforms we care about (reflection and 90-degree rotation) should
+    preserve integrality of coordinates.  Force this when integerize is true.
+    ###
     @saveForUndo()
+    integers = (Number.isInteger(x) for x in coords \
+                for coords in @fold.vertices_coords) if integerize
     FOLD.filter.transform @fold, matrix
+    if integerize
+      for ints, v in integers
+        for int, i in ints when int
+          @fold.vertices_coords[v][i] = Math.round @fold.vertices_coords[v][i]
     @loadCP @fold
   reflectX: ->
     {xMin, xMax} = @fold['cpedit:page']
