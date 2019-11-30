@@ -147,10 +147,8 @@ class Editor
 
   loadCP: (@fold) ->
     @mode.exit @
-    @vertexGroup.clear()
-    @drawVertex v for v in [0...@fold.vertices_coords.length]
-    @creaseGroup.clear()
-    @drawEdge v for v in [0...@fold.edges_vertices.length]
+    @drawVertices()
+    @drawEdges()
     @fold["cpedit:page"] ?=
       if @fold.vertices_coords?.length
         xMin: Math.min ...(v[0] for v in @fold.vertices_coords)
@@ -162,6 +160,12 @@ class Editor
     @updateGrid()
     document.getElementById('title').value = @fold.file_title ? ''
     @mode.enter @
+  drawVertices: ->
+    @vertexGroup.clear()
+    @drawVertex v for v in [0...@fold.vertices_coords.length]
+  drawEdges: ->
+    @creaseGroup.clear()
+    @drawEdge e for e in [0...@fold.edges_vertices.length]
   drawVertex: (v) ->
     @vertexCircle[v]?.remove()
     @vertexCircle[v] = @vertexGroup.circle 0.2
@@ -281,23 +285,43 @@ class LineDrawMode extends Mode
     .mouseenter null
     .mouseleave null
 
-class LineAssignMode extends Mode
+class LinePaintMode extends Mode
   enter: (editor) ->
     svg = editor.svg
     svg.mousedown change = (e) =>
       return unless e.buttons
       return unless e.target.tagName == 'line'
-      edge = e.target.getAttribute 'data-index'
-      return unless edge
-      unless editor.fold.edges_assignment[edge] == editor.lineType
-        editor.saveForUndo()
-        editor.fold.edges_assignment[edge] = editor.lineType
-      editor.drawEdge edge
+      edge = parseInt e.target.getAttribute 'data-index'
+      return if isNaN edge
+      @paint editor, edge
     svg.mouseover change  # painting
   exit: (editor) ->
     editor.svg
     .mousedown null
     .mouseover null
+
+class LineAssignMode extends LinePaintMode
+  paint: (editor, edge) ->
+    unless editor.fold.edges_assignment[edge] == editor.lineType
+      editor.saveForUndo()
+      editor.fold.edges_assignment[edge] = editor.lineType
+      editor.drawEdge edge
+
+class LineEraseMode extends LinePaintMode
+  paint: (editor, edge) ->
+    editor.saveForUndo()
+    vertices = editor.fold.edges_vertices[edge]
+    FOLD.filter.removeEdge editor.fold, edge
+    editor.drawEdges()
+    # Remove any now-isolated vertices
+    incident = {}
+    for edgeVertices in editor.fold.edges_vertices
+      for vertex in edgeVertices
+        incident[vertex] = true
+    for vertex in vertices
+      unless incident[vertex]
+        FOLD.filter.removeVertex editor.fold, vertex
+        editor.drawVertices() # might get called twice
 
 class VertexMoveMode extends Mode
   enter: (editor) ->
@@ -379,6 +403,7 @@ class VertexMoveMode extends Mode
 modes =
   drawLine: new LineDrawMode
   assignLine: new LineAssignMode
+  eraseLine: new LineEraseMode
   moveVertex: new VertexMoveMode
 
 window?.onload = ->
@@ -410,6 +435,8 @@ window?.onload = ->
         document.getElementById('drawLine').click()
       when 'a', 'A'
         document.getElementById('assignLine').click()
+      when 'e', 'E'
+        document.getElementById('eraseLine').click()
       when 'm'
         document.getElementById('moveVertex').click()
       when 'b', 'B'

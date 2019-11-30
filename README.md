@@ -8,6 +8,7 @@ This is a draft of a web software tool for drawing quick crease/slit patterns.
 * **Draw a crease** with two clicks or with dragging
 * **Recolor** existing creases as different types by dragging over them
   (easily recoloring just part of a line)
+* **Erase** existing creases by dragging over them
 * **Move vertices** by dragging them (bringing all connected edges with them)
 * **Snapping** to grid or existing vertex (e.g. from intersection)
 * **Undo/redo**
