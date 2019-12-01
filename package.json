@@ -18,7 +18,7 @@
     "jstransformer-stylus": "^1.5.0"
   },
   "dependencies": {
-    "fold": "^0.10.3",
+    "fold": "^0.11.0",
     "svg.js": "^2.7.1"
   }
 }
