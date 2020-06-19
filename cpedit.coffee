@@ -212,7 +212,7 @@ class Editor
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = (@fold.file_title or 'creasepattern') + '.cp'
     a.click()
-  downloadFold: ->
+  convertToFold: ->
     ## Add face structure to @fold
     fold = FOLD.convert.deepCopy @fold
     FOLD.convert.edges_vertices_to_vertices_edges_sorted fold
@@ -220,9 +220,10 @@ class Editor
     #console.log 'cut', fold
     FOLD.convert.vertices_edges_to_faces_vertices_edges fold
     #console.log fold
-    
+    fold
+  downloadFold: ->
     ## Export and download
-    json = FOLD.convert.toJSON fold
+    json = FOLD.convert.toJSON @convertToFold()
     a = document.getElementById 'foldlink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = (@fold.file_title or 'creasepattern') + '.fold'
@@ -541,3 +542,35 @@ window?.onload = ->
       document.getElementById("angle#{op}#{amt}").addEventListener 'click',
         do (sign, amt) -> (e) ->
           setAngle angle + sign * amt
+  ## Origami Simulator
+  simulator = null
+  ready = false
+  onReady = null
+  checkReady = ->
+    if ready
+      onReady?()
+      onReady = null
+  window.addEventListener 'message', (e) ->
+    if e.data and e.data.from == 'OrigamiSimulator' and e.data.status == 'ready'
+      ready = true
+      checkReady()
+  document.getElementById('simulate').addEventListener 'click', (e) ->
+    if simulator? and not simulator.closed
+      simulator.focus()
+    else
+      ready = false
+      simulator = window.open 'OrigamiSimulator/?model=', 'simulator'
+    fold = editor.convertToFold()
+    ## Origami Simulator wants 'F' for unfolded (facet) creases;
+    ## it uses 'U' for undriven creases. :-/
+    fold.edges_assignment =
+      for assignment in fold.edges_assignment
+        if assignment == 'U'
+          'F'
+        else
+          assignment
+    onReady = -> simulator.postMessage
+      op: 'importFold'
+      fold: fold
+    , '*'
+    checkReady()

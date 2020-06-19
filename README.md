@@ -25,4 +25,5 @@ This is a draft of a web software tool for drawing quick crease/slit patterns.
 
 ## Installation
 * Type `npm install` to do the necessary preparation
+* Type `git submodule update --init --recursive` to use Origami Simulator integration
 * Open `cpedit.html` in a web browser such as Chrome
