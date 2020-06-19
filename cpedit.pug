@@ -21,6 +21,8 @@ html
       .input.clickable
         input#downloadSVG(type='button', value='Export .svg', title='For Origami Simulator or paper figures')
         a#svglink
+      .input.clickable
+        input#simulate(type='button', value='Simulate', title='Launch Origami Simulator in a new window with current pattern')
       hr
       .input
         input#title(type='text', placeholder='Title')
@@ -85,7 +87,8 @@ html
           .gap
           button#angleSub1 &minus;1
           button#angleSub90 &minus;90
-      .input.clickable
-        input#simulate(type='button', value='Simulate', title='Launch Origami Simulator in a new window with current pattern')
+      hr
+      .input
+        a(href="https://github.com/edemaine/cp-editor/") Source code on Github
     div#interface
     div#tempSVG(style='display: none')

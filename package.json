@@ -2,6 +2,7 @@
   "name": "cp-editor",
   "version": "0.0.0",
   "description": "Crease pattern editor",
+  "repository": "https://github.com/edemaine/cp-editor/",
   "scripts": {
     "prepare": "gulp",
     "watch": "gulp watch",
