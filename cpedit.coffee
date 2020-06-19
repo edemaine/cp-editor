@@ -7,6 +7,12 @@ defaultPage = ->
 
 FOLD = require 'fold'
 
+foldAngleToOpacity = (foldAngle, assignment) ->
+  if assignment in ['M', 'V']
+    Math.max 0.1, (Math.abs foldAngle ? 180) / 180
+  else
+    1
+
 class Editor
   constructor: (@svg) ->
     @undoStack = []
@@ -20,6 +26,7 @@ class Editor
       vertices_coords: []
       edges_vertices: []
       edges_assignment: []
+      edges_foldAngle: []
       "cpedit:page": defaultPage()
     @gridGroup = @svg.group()
     .addClass 'grid'
@@ -69,6 +76,14 @@ class Editor
     @mode = mode
     @mode.enter @
   setLineType: (@lineType) ->
+  setAbsFoldAngle: (@absFoldAngle) ->
+  getFoldAngle: ->
+    if @lineType == 'V'
+      @absFoldAngle
+    else if @lineType == 'M'
+      -@absFoldAngle
+    else
+      0
   escape: ->
     @mode?.escape? @
 
@@ -78,13 +93,14 @@ class Editor
     @drawVertex i if i == @fold.vertices_coords.length - 1  # new vertex
     @drawEdge e for e in changedEdges
     i
-  addCrease: (p1, p2, assignment) ->
+  addCrease: (p1, p2, assignment, foldAngle) ->
     p1 = @addVertex p1
     p2 = @addVertex p2
     newVertices = @fold.vertices_coords.length
     changedEdges = FOLD.filter.addEdgeAndSubdivide @fold, p1, p2, FOLD.geom.EPS
     for e in changedEdges[0]
       @fold.edges_assignment[e] = assignment
+      @fold.edges_foldAngle[e] = foldAngle
     @drawEdge e for e in changedEdges[i] for i in [0, 1]
     @drawVertex v for v in [newVertices ... @fold.vertices_coords.length]
     #console.log @fold
@@ -148,6 +164,15 @@ class Editor
   loadCP: (@fold) ->
     @mode.exit @
     @drawVertices()
+    @fold.edges_foldAngle ?=
+      for assignment in @fold.edges_assignment
+        switch assignment
+          when 'V'
+            180    # "The fold angle is positive for valley folds,"
+          when 'M'
+            -180   # "negative for mountain folds, and"
+          else
+            0      # "zero for flat, unassigned, and border folds"
     @drawEdges()
     @fold["cpedit:page"] ?=
       if @fold.vertices_coords?.length
@@ -175,8 +200,10 @@ class Editor
     @creaseLine[e]?.remove()
     coords = (@fold.vertices_coords[v] for v in @fold.edges_vertices[e])
     @creaseLine[e] =
-    @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
+    l = @creaseGroup.line coords[0][0], coords[0][1], coords[1][0], coords[1][1]
     .addClass @fold.edges_assignment[e]
+    .attr 'stroke-opacity',
+      foldAngleToOpacity @fold.edges_foldAngle[e], @fold.edges_assignment[e]
     .attr 'data-index', e
 
   downloadCP: ->
@@ -242,6 +269,8 @@ class LineDrawMode extends Mode
       if @which == 1
         @line ?= editor.dragGroup.line().addClass 'drag'
         @crease ?= editor.dragGroup.line().addClass editor.lineType
+        .attr 'stroke-opacity',
+          foldAngleToOpacity editor.getFoldAngle(), editor.lineType
         @line.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
         @crease.plot @points[0].x, @points[0].y, @points[1].x, @points[1].y
     svg.mousedown (e) =>
@@ -258,7 +287,8 @@ class LineDrawMode extends Mode
         unless @points[0].x == @points[1].x and
                @points[0].y == @points[1].y
           editor.saveForUndo()
-          editor.addCrease @points[0], @points[1], editor.lineType
+          editor.addCrease @points[0], @points[1],
+            editor.lineType, editor.getFoldAngle()
         @escape editor
         move e
     svg.mouseenter (e) =>
@@ -302,9 +332,11 @@ class LinePaintMode extends Mode
 
 class LineAssignMode extends LinePaintMode
   paint: (editor, edge) ->
-    unless editor.fold.edges_assignment[edge] == editor.lineType
+    unless editor.fold.edges_assignment[edge] == editor.lineType and
+           editor.fold.edges_foldAngle[edge] == editor.getFoldAngle()
       editor.saveForUndo()
       editor.fold.edges_assignment[edge] = editor.lineType
+      editor.fold.edges_foldAngle[edge] = editor.getFoldAngle()
       editor.drawEdge edge
 
 class LineEraseMode extends LinePaintMode
@@ -490,3 +522,22 @@ window?.onload = ->
           editor.updateGrid()
   document.getElementById('title').addEventListener 'input', (e) ->
     editor.setTitle document.getElementById('title').value
+  ## Fold angle
+  angleInput = document.getElementById 'angle'
+  angle = null
+  setAngle = (value) ->
+    return unless typeof value == 'number'
+    return if isNaN value
+    angle = value
+    angle = Math.max angle, 0
+    angle = Math.min angle, 180
+    angleInput.value = angle
+    editor.setAbsFoldAngle angle
+  setAngle parseFloat angleInput.value  # initial value
+  angleInput.addEventListener 'change', (e) ->
+    setAngle eval angleInput.value  # allow formulas via eval
+  for [sign, op] in [[+1, 'Add'], [-1, 'Sub']]
+    for amt in [1, 90]
+      document.getElementById("angle#{op}#{amt}").addEventListener 'click',
+        do (sign, amt) -> (e) ->
+          setAngle angle + sign * amt

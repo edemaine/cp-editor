@@ -8,7 +8,7 @@ html
     style
       include:stylus cpedit.styl
   body
-    div#menu
+    #menu
       .input.clickable
         input#loadCP(type='button', value='Load .cp', title='Load previously saved .cp file')
         input#fileCP(type='file', style='display: none')
@@ -74,5 +74,16 @@ html
       .input.clickable
         input#cut(type='radio', name='line', value='C')
         label(for='cut') Cut (<code>C</code>)
+      .multinput
+        .input
+          label(for='angle', title='Between 0 and 180 degrees. Use Mountain/Valley for sign. Can use JavaScript formulas.') Absolute fold angle:
+          .gap
+          button#angleAdd1 +1
+          button#angleAdd90 +90
+        .input
+          input#angle(type='text', value='180', title='Between 0 and 180 degrees. Use Mountain/Valley for sign. Can use JavaScript formulas.')
+          .gap
+          button#angleSub1 &minus;1
+          button#angleSub90 &minus;90
     div#interface
     div#tempSVG(style='display: none')

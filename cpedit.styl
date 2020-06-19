@@ -27,8 +27,11 @@ body
     font-size: large
   white-space: nowrap
   padding: 5px 10px 5px 5px
-  display: flex
-  align-items: center
+  .input
+    padding: 2px 0px
+  .gap
+    min-width: 5px
+    flex: 0
 
   &:hover
     color: yellow
@@ -38,8 +41,21 @@ body
     display: block
     flex: 1
 
-  input[type='button']
+  input[type='button'], td button
     width: 100%
+  input[type='text']
+    width: 5em
+    flex: 1
+
+table
+  color: inherit
+  font: inherit
+  td
+    padding: 0
+
+.input
+  display: flex
+  align-items: center
 
 .clickable, .clickable button, .clickable input, .clickable label, .input button
   cursor: pointer
