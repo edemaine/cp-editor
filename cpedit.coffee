@@ -559,7 +559,8 @@ window?.onload = ->
       simulator.focus()
     else
       ready = false
-      simulator = window.open 'OrigamiSimulator/?model=', 'simulator'
+      #simulator = window.open 'OrigamiSimulator/?model=', 'simulator'
+      simulator = window.open 'https://origamisimulator.org/?model=', 'simulator'
     fold = editor.convertToFold()
     ## Origami Simulator wants 'F' for unfolded (facet) creases;
     ## it uses 'U' for undriven creases. :-/
