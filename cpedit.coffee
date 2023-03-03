@@ -43,8 +43,8 @@ class Editor
   updateGrid: ->
     # Call whenever page dimensions change
     page = @fold["cpedit:page"]
-    document.getElementById('width')?.innerHTML = page.xMax
-    document.getElementById('height')?.innerHTML = page.yMax
+    document?.getElementById('width')?.innerHTML = page.xMax
+    document?.getElementById('height')?.innerHTML = page.yMax
     @gridGroup.clear()
     for x in [0..page.xMax]
       @gridGroup.line x, page.yMin, x, page.yMax
@@ -127,8 +127,8 @@ class Editor
     @loadCP @fold
     @updateUndoStack()
   updateUndoStack: ->
-    document.getElementById('undo')?.disabled = (@undoStack.length == 0)
-    document.getElementById('redo')?.disabled = (@redoStack.length == 0)
+    document?.getElementById('undo')?.disabled = (@undoStack.length == 0)
+    document?.getElementById('redo')?.disabled = (@redoStack.length == 0)
 
   transform: (matrix, integerize = true) ->
     ###
@@ -168,7 +168,7 @@ class Editor
   shiftD: -> @translate 0, +1
 
   loadCP: (@fold) ->
-    @mode.exit @
+    @mode?.exit @
     @drawVertices()
     @fold.edges_foldAngle ?=
       for assignment in @fold.edges_assignment
@@ -189,8 +189,8 @@ class Editor
       else
         defaultPage()
     @updateGrid()
-    document.getElementById('title').value = @fold.file_title ? ''
-    @mode.enter @
+    document?.getElementById('title').value = @fold.file_title ? ''
+    @mode?.enter @
   drawVertices: ->
     @vertexGroup.clear()
     @drawVertex v for v in [0...@fold.vertices_coords.length]
@@ -250,7 +250,7 @@ class Editor
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = (@fold.file_title or 'creasepattern') + '.cp'
     a.click()
-  convertToFold: ->
+  convertToFold: (json = true) ->
     ## Add face structure to @fold
     fold = FOLD.convert.deepCopy @fold
     FOLD.convert.edges_vertices_to_vertices_edges_sorted fold
@@ -258,15 +258,16 @@ class Editor
     #console.log 'cut', fold
     FOLD.convert.vertices_edges_to_faces_vertices_edges fold
     #console.log fold
+    fold = FOLD.convert.toJSON fold if json
     fold
   downloadFold: ->
     ## Export and download
-    json = FOLD.convert.toJSON @convertToFold()
+    json = @convertToFold()
     a = document.getElementById 'foldlink'
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = (@fold.file_title or 'creasepattern') + '.fold'
     a.click()
-  downloadSVG: ->
+  convertToSVG: ->
     svg = @svg.clone()
     svg.select('.M').each -> @stroke {color: '#ff0000', width: 0.1}
     svg.select('.V').each -> @stroke {color: '#0000ff', width: 0.1}
@@ -276,8 +277,10 @@ class Editor
     svg.select('.grid, .vertex, .drag').each -> @remove()
     svg.attr 'width', "#{@svg.viewbox().width}cm"
     svg.attr 'height', "#{@svg.viewbox().height}cm"
-    svg = svg.svg()
+    svg.svg()
     .replace /[ ]id="[^"]+"/g, ''
+  downloadSVG: ->
+    svg = @convertToSVG()
     a = document.getElementById 'svglink'
     a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
     a.download = (@fold.file_title or 'creasepattern') + '.svg'
@@ -606,7 +609,7 @@ window?.onload = ->
       ready = false
       #simulator = window.open 'OrigamiSimulator/?model=', 'simulator'
       simulator = window.open 'https://origamisimulator.org/?model=', 'simulator'
-    fold = editor.convertToFold()
+    fold = editor.convertToFold false
     ## Origami Simulator wants 'F' for unfolded (facet) creases;
     ## it uses 'U' for undriven creases. :-/
     fold.edges_assignment =
@@ -620,3 +623,138 @@ window?.onload = ->
       fold: fold
     , '*'
     checkReady()
+
+## CLI
+
+## VDOM simulation of used subset of svg.js interface
+class VSVG
+  constructor: (@tag) ->
+    @classes = new Set
+    @attrs = new Map
+    @children = []
+  svg: ->
+    s = ''
+    if @tag == 'svg'
+      s += '''
+        <?xml version="1.0" encoding="utf-8"?>
+
+      '''
+      @attrs.set 'xmlns', 'http://www.w3.org/2000/svg'
+    if @classes.size
+      @attrs.set 'class', (c for c from @classes).join ' '
+    else
+      @attrs.delete 'class'
+    s += "<#{@tag}"
+    for [key, value] from @attrs
+      s += " #{key}=\"#{value}\""
+    if @children.length
+      s + ">\n" + (
+        for child in @children when not child.removed
+          child.svg()
+      ).join("\n") +
+      "\n</#{@tag}>"
+    else
+      s + "/>"
+  remove: ->
+    @removed = true
+    @
+  clear: ->
+    @children = []
+    @
+  attr: (key, value) ->
+    if value?  # setter
+      @attrs.set key, value
+      @
+    else  # getter
+      @attrs.get key
+  viewbox: (x, y, width, height) ->
+    if x?  # setter
+      @attr 'viewBox', "#{x} #{y} #{width} #{height}"
+    else  # getter
+      coords = @attr 'viewBox'
+      .split /\s+/
+      .map parseFloat
+      x: coords[0]
+      y: coords[1]
+      width: coords[2]
+      height: coords[2]
+  addClass: (c) ->
+    @classes.add c
+    @
+  group: ->
+    @children.push child = new VSVG 'g'
+    child
+  line: (x1, y1, x2, y2) ->
+    @children.push child = new VSVG 'line'
+    child
+    .attr 'x1', x1
+    .attr 'y1', y1
+    .attr 'x2', x2
+    .attr 'y2', y2
+  stroke: ({color, width}) ->
+    @attr 'stroke', color if color?
+    @attr 'stroke-width', width if width?
+    @
+  circle: (diameter) ->
+    @children.push child = new VSVG 'circle'
+    child.attr 'r', diameter / 2
+  center: (x, y) ->
+    console.assert @tag == 'circle'
+    @attr 'cx', x
+    .attr 'cy', y
+  clone: ->
+    # Ignore clone operation because we're not rendering to DOM
+    @
+  select: (pattern) ->
+    classes =
+      for part in pattern.split /\s*,\s*/
+        match = part.match /^\.([^.]+)$/
+        throw new Error "Bad select pattern '#{part}'" unless match?
+        match[1]
+    results = []
+    results.each = (f) -> f.call node for node in @
+    recurse = (node) ->
+      match = false
+      for class_ in classes
+        if node.classes.has class_
+          match = true
+          break
+      results.push node if match
+      for child in node.children when not child.removed
+        recurse child
+      return
+    recurse @
+    results
+
+cli = (args = process.argv[2..]) ->
+  fs = require 'fs'
+  unless args.length
+    console.log """
+      Usage: coffee cpedit.coffee [formats] file1.cp file2.cp ...
+      Formats:
+        -s/--svg   .svg
+        -f/--fold  .fold
+    """
+  formats = []
+  cpFiles = []
+  for arg in args
+    switch arg
+      when '-s', '--svg'
+        formats.push 'SVG'
+      when '-f', '--fold'
+        formats.push 'Fold'
+      else
+        if arg.startsWith '-'
+          console.log "Unknown option: #{arg}"
+          continue
+        cpFiles.push arg
+  for cpFile in cpFiles
+    editor = new Editor new VSVG 'svg'
+    cpData = JSON.parse fs.readFileSync cpFile, encoding: 'utf8'
+    editor.loadCP cpData
+    for format in formats
+      output = editor["convertTo#{format}"]()
+      outputPath = cpFile.replace /(\.cp)?$/, ".#{format.toLowerCase()}"
+      fs.writeFileSync outputPath, output, encoding: 'utf8'
+
+cli() if module? and require?.main == module
