@@ -229,15 +229,17 @@ class Editor
     a.download = (@fold.file_title or 'creasepattern') + '.fold'
     a.click()
   downloadSVG: ->
-    svg = SVG tempSVG
-    svg.svg @svg.svg()
+    svg = @svg.clone()
     svg.select('.M').each -> @stroke {color: '#ff0000', width: 0.1}
     svg.select('.V').each -> @stroke {color: '#0000ff', width: 0.1}
     svg.select('.B').each -> @stroke {color: '#000000', width: 0.1}
     svg.select('.C').each -> @stroke {color: '#00ff00', width: 0.1}
     svg.select('.U').each -> @stroke {color: '#ffff00', width: 0.1}
     svg.select('.grid, .vertex, .drag').each -> @remove()
+    svg.attr 'width', "#{@svg.viewbox().width}cm"
+    svg.attr 'height', "#{@svg.viewbox().height}cm"
     svg = svg.svg()
+    .replace /[ ]id="[^"]+"/g, ''
     a = document.getElementById 'svglink'
     a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
     a.download = (@fold.file_title or 'creasepattern') + '.svg'
