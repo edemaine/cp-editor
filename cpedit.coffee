@@ -288,8 +288,9 @@ class LineDrawMode extends Mode
         @which = 1
       else
         ## Commit new crease, unless it's zero length.
-        unless @points[0].x == @points[1].x and
-               @points[0].y == @points[1].y
+        unless @which == 0 or (
+          @points[0].x == @points[1].x and @points[0].y == @points[1].y
+        )
           editor.saveForUndo()
           editor.addCrease @points[0], @points[1],
             editor.lineType, editor.getFoldAngle()
