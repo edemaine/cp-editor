@@ -16,9 +16,9 @@ exports.coffee = coffee = ->
   .pipe gulp.dest './'
 
 exports.watch = watch = ->
-  gulp.watch '*.pug', pug
+  gulp.watch '*.pug', ignoreInitial: false, pug
   gulp.watch '*.styl', pug
-  gulp.watch '*.coffee', coffee
+  gulp.watch '*.coffee', ignoreInitial: false, coffee
 
 exports.default = gulp.series ...[
   gulp.parallel pug, coffee
