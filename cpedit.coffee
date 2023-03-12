@@ -269,12 +269,12 @@ class Editor
     a.click()
   convertToSVG: ->
     svg = @svg.clone()
-    svg.select('.M').each -> @stroke {color: '#ff0000', width: 0.1}
-    svg.select('.V').each -> @stroke {color: '#0000ff', width: 0.1}
-    svg.select('.B').each -> @stroke {color: '#000000', width: 0.1}
-    svg.select('.C').each -> @stroke {color: '#00ff00', width: 0.1}
-    svg.select('.U').each -> @stroke {color: '#ffff00', width: 0.1}
-    svg.select('.grid, .vertex, .drag').each -> @remove()
+    svg.find('.M').stroke {color: '#ff0000', width: 0.1}
+    svg.find('.V').stroke {color: '#0000ff', width: 0.1}
+    svg.find('.B').stroke {color: '#000000', width: 0.1}
+    svg.find('.C').stroke {color: '#00ff00', width: 0.1}
+    svg.find('.U').stroke {color: '#ffff00', width: 0.1}
+    svg.find('.grid, .vertex, .drag').remove()
     svg.attr 'width', "#{@svg.viewbox().width}cm"
     svg.attr 'height', "#{@svg.viewbox().height}cm"
     svg.svg()
@@ -414,7 +414,7 @@ class VertexMoveMode extends Mode
     svg.mousedown (e) =>
       @vertex = parseInt e.target.getAttribute 'data-index'
       if e.target.tagName == 'circle' and @vertex?
-        @circle = SVG.get e.target.id
+        @circle = e.target.instance
         .addClass 'drag'
         @down = null # special value meaning 'set'
         move e
@@ -437,12 +437,12 @@ class VertexMoveMode extends Mode
         @escape editor
     svg.mouseover (e) =>
       return if @vertex?
-      return unless e.target.tagName == 'circle' and e.target.getAttribute 'data-index'
-      SVG.get(e.target.id).addClass 'drag'
+      return unless e.target.tagName == 'circle' and index = e.target.getAttribute 'data-index'
+      e.target.instance.addClass 'drag'
     svg.mouseout (e) =>
       return unless e.target.tagName == 'circle' and e.target.getAttribute 'data-index'
       return if @vertex == parseInt e.target.getAttribute 'data-index'
-      SVG.get(e.target.id).removeClass 'drag'
+      e.target.instance.removeClass 'drag'
     #svg.mouseenter (e) =>
     #  ## Cancel crease if user exits, lets go of button, and re-enters
     #  @escape editor if @dragging and e.buttons == 0
@@ -461,8 +461,8 @@ class VertexMoveMode extends Mode
   exit: (editor) ->
     @escape editor
     editor.svg
-    .select '.vertex circle.drag'
-    .each -> @removeClass 'drag'
+    .find '.vertex circle.drag'
+    .removeClass 'drag'
     editor.svg
     .mousemove null
     .mousedown null
@@ -473,7 +473,7 @@ class VertexMoveMode extends Mode
     @circle.center @point.x, @point.y
     vertex = @vertex
     point = @point
-    editor.svg.select '.crease line'
+    editor.svg.find '.crease line'
     .each ->
       edge = @attr 'data-index'
       i = editor.fold.edges_vertices[edge].indexOf vertex
@@ -488,7 +488,7 @@ modes =
   moveVertex: new VertexMoveMode
 
 window?.onload = ->
-  svg = SVG 'interface'
+  svg = SVG().addTo '#interface'
   editor = new Editor svg
   for input in document.getElementsByTagName 'input'
     do (input) ->
@@ -705,7 +705,7 @@ class VSVG
   clone: ->
     # Ignore clone operation because we're not rendering to DOM
     @
-  select: (pattern) ->
+  find: (pattern) ->
     classes =
       for part in pattern.split /\s*,\s*/
         match = part.match /^\.([^.]+)$/
@@ -713,6 +713,11 @@ class VSVG
         match[1]
     results = []
     results.each = (f) -> f.call node for node in @
+    for shortcut in ['stroke', 'remove']
+      do (shortcut) ->
+        results[shortcut] = (...args) ->
+          for node in results
+            node[shortcut](...args)
     recurse = (node) ->
       match = false
       for class_ in classes
