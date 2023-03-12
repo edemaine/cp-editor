@@ -730,15 +730,20 @@ cli = (args = process.argv[2..]) ->
   fs = require 'fs'
   unless args.length
     console.log """
-      Usage: coffee cpedit.coffee [formats] file1.cp file2.cp ...
+      Usage: coffee cpedit.coffee [formats/options] file1.cp file2.cp ...
       Formats:
         -s/--svg   .svg
         -f/--fold  .fold
+      Options:
+        -c/--cleanup  Remove unnecessary degree-0 and -2 vertices
     """
   formats = []
   cpFiles = []
+  cleanup = false
   for arg in args
     switch arg
+      when '-c', '--clean', '--cleanup'
+        cleanup = true
       when '-s', '--svg'
         formats.push 'SVG'
       when '-f', '--fold'
@@ -752,6 +757,7 @@ cli = (args = process.argv[2..]) ->
     editor = new Editor new VSVG 'svg'
     cpData = JSON.parse fs.readFileSync cpFile, encoding: 'utf8'
     editor.loadCP cpData
+    editor.cleanup() if cleanup
     for format in formats
       output = editor["convertTo#{format}"]()
       outputPath = cpFile.replace /(\.cp)?$/, ".#{format.toLowerCase()}"

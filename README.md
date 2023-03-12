@@ -18,7 +18,7 @@ Currently it works well for crease patterns that fit on an integer grid.
 * **Cleanup** to remove extra degree-0 or -2 vertices
 * **Undo/redo**
 * **Save/export** to .fold/.svg, including cutting (unwelding) of slits
-* **CLI** for bulk conversion: `node cpedit.js --fold --svg filename.cp`
+* **CLI** for bulk conversion: `node cpedit.js --cleanup --fold --svg filename.cp`
 * **Title** setting for document (`file_title` in fold format)
 * **Page size** setting (width and height)
 * **Transform** document by reflection or 90&deg; rotation
