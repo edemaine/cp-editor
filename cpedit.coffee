@@ -212,6 +212,38 @@ class Editor
       foldAngleToOpacity @fold.edges_foldAngle[e], @fold.edges_assignment[e]
     .attr 'data-index', e
 
+  cleanup: ->
+    # Check for vertices of degree 0, or of degree 2
+    # where the two incident edges are parallel.
+    # Consider vertices in decreasing order so that indices don't change.
+    FOLD.convert.edges_vertices_to_vertices_edges_unsorted @fold
+    for v in [@fold.vertices_coords.length-1 .. 0]
+      if @fold.vertices_edges[v].length == 0
+        FOLD.filter.removeVertex @fold, v
+      else if @fold.vertices_edges[v].length == 2
+        edges = @fold.vertices_edges[v]
+        vectors =
+          for edge in edges
+            vertices = @fold.edges_vertices[edge]
+            coords =
+              for vertex in vertices
+                @fold.vertices_coords[vertex]
+            FOLD.geom.mul (FOLD.geom.unit FOLD.geom.sub coords[0], coords[1]),
+              if vertices[0] == v then 1 else -1
+        if (FOLD.geom.dot vectors[0], vectors[1]) <= -1 + FOLD.geom.EPS
+          for otherV in @fold.edges_vertices[edges[1]]
+            break unless v == otherV
+          vertices = @fold.edges_vertices[edges[0]]
+          for i in [0...2]
+            if vertices[i] == v
+              vertices[i] = otherV
+          FOLD.filter.removeEdge @fold, edges[1]
+          FOLD.filter.removeVertex @fold, v
+          FOLD.convert.edges_vertices_to_vertices_edges_unsorted @fold
+    delete @fold.vertices_edges
+    @drawVertices()
+    @drawEdges()
+
   downloadCP: ->
     json = FOLD.convert.toJSON @fold
     a = document.getElementById 'cplink'
@@ -501,7 +533,7 @@ window?.onload = ->
         editor.undo()
       when 'y', 'Z'
         editor.redo()
-  for id in ['undo', 'redo', 'reflectX', 'reflectY', 'rotateCCW', 'rotateCW', 'shiftL', 'shiftD', 'shiftU', 'shiftR']
+  for id in ['cleanup', 'undo', 'redo', 'reflectX', 'reflectY', 'rotateCCW', 'rotateCW', 'shiftL', 'shiftD', 'shiftU', 'shiftR']
     do (id) ->
       document.getElementById(id).addEventListener 'click', (e) ->
         e.stopPropagation()
