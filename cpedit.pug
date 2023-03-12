@@ -38,10 +38,17 @@ html
         button#heightInc +
       .input
         label Transform:
-        button#reflectX(title="Reflect horizontally") ⇹
-        button#reflectY(title="Reflect vertically") ↕
-        button#rotateCCW(title="Rotate 90° counterclockwise") ⟲
-        button#rotateCW(title="Rotate 90° clockwise") ⟳
+        .stack
+          .row
+            button#reflectX(title="Reflect horizontally") ⇹
+            button#reflectY(title="Reflect vertically") ↕
+            button#rotateCCW(title="Rotate 90° counterclockwise") ⟲
+            button#rotateCW(title="Rotate 90° clockwise") ⟳
+          .row
+            button#shiftL(title="Shift left") ←
+            button#shiftD(title="Shift down") ↓
+            button#shiftU(title="Shift up") ↑
+            button#shiftR(title="Shift right") →
       hr
       .input.clickable
         input#undo(type='button', value='Undo', title='Shortcut: z or ctrl-z')

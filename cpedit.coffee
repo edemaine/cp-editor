@@ -160,6 +160,12 @@ class Editor
       [(xMin + xMax) / 2, (yMin + yMax) / 2]
   rotateCW: -> @rotate90 true
   rotateCCW: -> @rotate90 false
+  translate: (dx, dy) ->
+    @transform FOLD.geom.matrixTranslate [dx, dy]
+  shiftL: -> @translate -1, 0
+  shiftR: -> @translate +1, 0
+  shiftU: -> @translate 0, -1
+  shiftD: -> @translate 0, +1
 
   loadCP: (@fold) ->
     @mode.exit @
@@ -495,7 +501,7 @@ window?.onload = ->
         editor.undo()
       when 'y', 'Z'
         editor.redo()
-  for id in ['undo', 'redo', 'reflectX', 'reflectY', 'rotateCCW', 'rotateCW']
+  for id in ['undo', 'redo', 'reflectX', 'reflectY', 'rotateCCW', 'rotateCW', 'shiftL', 'shiftD', 'shiftU', 'shiftR']
     do (id) ->
       document.getElementById(id).addEventListener 'click', (e) ->
         e.stopPropagation()
