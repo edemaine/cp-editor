@@ -355,6 +355,9 @@ class LineEraseMode extends LinePaintMode
     for edgeVertices in editor.fold.edges_vertices
       for vertex in edgeVertices
         incident[vertex] = true
+    # Remove vertices in decreasing order so that indices don't change
+    if vertices[0] < vertices[1]
+      vertices = [vertices[1], vertices[0]]
     for vertex in vertices
       unless incident[vertex]
         FOLD.filter.removeVertex editor.fold, vertex
