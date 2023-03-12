@@ -267,14 +267,19 @@ class Editor
     a.href = URL.createObjectURL new Blob [json], type: "application/json"
     a.download = (@fold.file_title or 'creasepattern') + '.fold'
     a.click()
-  convertToSVG: ->
+  convertToSVG: (options) ->
     svg = @svg.clone()
     svg.find('.M').stroke {color: '#ff0000', width: 0.1}
     svg.find('.V').stroke {color: '#0000ff', width: 0.1}
     svg.find('.B').stroke {color: '#000000', width: 0.1}
     svg.find('.C').stroke {color: '#00ff00', width: 0.1}
-    svg.find('.U').stroke {color: '#ffff00', width: 0.1}
-    svg.find('.grid, .vertex, .drag').remove()
+    unless options?.noUnfold
+      svg.find('.U').stroke {color: '#ffff00', width: 0.1}
+    svg.find('.vertex, .drag').remove()
+    if options?.grid
+      svg.find('.grid').stroke {color: '#dddddd', width: 0.05}
+    else
+      svg.find('.grid').remove()
     svg.attr 'width', "#{@svg.viewbox().width}cm"
     svg.attr 'height', "#{@svg.viewbox().height}cm"
     svg.element('style').words '''
@@ -751,11 +756,14 @@ cli = (args = process.argv[2..]) ->
         -s/--svg   .svg
         -f/--fold  .fold
       Options:
-        -c/--cleanup  Remove unnecessary degree-0 and -2 vertices
+        -c/--cleanup    Remove unnecessary degree-0 and -2 vertices
+        -g/--grid       Keep grid lines
+        -u/--no-unfold  Don't color unfolded creases yellow
     """
   formats = []
   cpFiles = []
   cleanup = false
+  options = {}
   for arg in args
     switch arg
       when '-c', '--clean', '--cleanup'
@@ -764,6 +772,10 @@ cli = (args = process.argv[2..]) ->
         formats.push 'SVG'
       when '-f', '--fold'
         formats.push 'Fold'
+      when '-u', '--no-unfold'
+        options.noUnfold = true
+      when '-g', '--grid'
+        options.grid = true
       else
         if arg.startsWith '-'
           console.log "Unknown option: #{arg}"
@@ -775,7 +787,7 @@ cli = (args = process.argv[2..]) ->
     editor.loadCP cpData
     editor.cleanup() if cleanup
     for format in formats
-      output = editor["convertTo#{format}"]()
+      output = editor["convertTo#{format}"] options
       outputPath = cpFile.replace /(\.cp)?$/, ".#{format.toLowerCase()}"
       fs.writeFileSync outputPath, output, encoding: 'utf8'
 
