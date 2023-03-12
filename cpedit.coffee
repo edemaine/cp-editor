@@ -277,6 +277,9 @@ class Editor
     svg.find('.grid, .vertex, .drag').remove()
     svg.attr 'width', "#{@svg.viewbox().width}cm"
     svg.attr 'height', "#{@svg.viewbox().height}cm"
+    svg.element('style').words '''
+      line { stroke-linecap: round; }
+    '''
     svg.svg()
     .replace /[ ]id="[^"]+"/g, ''
   downloadSVG: ->
@@ -647,7 +650,9 @@ class VSVG
     s += "<#{@tag}"
     for [key, value] from @attrs
       s += " #{key}=\"#{value}\""
-    if @children.length
+    if @innerHTML
+      s + ">\n" + @innerHTML + "\n</#{@tag}>"
+    else if @children.length
       s + ">\n" + (
         for child in @children when not child.removed
           child.svg()
@@ -702,6 +707,12 @@ class VSVG
     console.assert @tag == 'circle'
     @attr 'cx', x
     .attr 'cy', y
+  element: (tag) ->
+    @children.push child = new VSVG tag
+    child
+  words: (child) ->
+    @innerHTML = child
+    @
   clone: ->
     # Ignore clone operation because we're not rendering to DOM
     @
