@@ -269,15 +269,32 @@ class Editor
     a.click()
   convertToSVG: (options) ->
     svg = @svg.clone()
-    svg.find('.M').stroke {color: '#ff0000', width: 0.1}
-    svg.find('.V').stroke {color: '#0000ff', width: 0.1}
-    svg.find('.B').stroke {color: '#000000', width: 0.1}
-    svg.find('.C').stroke {color: '#00ff00', width: 0.1}
+    svg.find('.C').front()
+    svg.find('.B').front()
+    svg.find('.B').stroke color: '#000000'
+    if options?.nice
+      ## Cuts look the same as boundary, and are very thick (0.2).
+      svg.find('.B, .C').stroke width: 0.2
+      svg.find('.C').stroke color: '#000000'
+      ## Nice blue/red, even in grayscale
+      svg.find('.M').stroke color: '#ff6060'
+      svg.find('.V').stroke color: '#385dcf'
+      ## Instead of opacity, use thickness for bigger folds.
+      ## 90 degrees has thickness 0.1, while 180 degrees has thickness 0.15.
+      svg.find('.M, .V, .B, .C').each ->
+        t = @attr 'stroke-opacity'
+        @stroke width: (1-t) * 0.05 + t * 0.15
+        @attr 'stroke-opacity', 1
+    else
+      svg.find('.M, .V, .B, .C').stroke width: 0.1
+      svg.find('.C').stroke color: '#00ff00'
+      svg.find('.M').stroke color: '#ff0000'
+      svg.find('.V').stroke color: '#0000ff'
     unless options?.noUnfold
-      svg.find('.U').stroke {color: '#ffff00', width: 0.1}
+      svg.find('.U').stroke color: '#ffff00', width: 0.1
     svg.find('.vertex, .drag').remove()
     if options?.grid
-      svg.find('.grid').stroke {color: '#dddddd', width: 0.05}
+      svg.find('.grid').stroke color: '#dddddd', width: 0.05
     else
       svg.find('.grid').remove()
     svg.attr 'width', "#{@svg.viewbox().width}cm"
@@ -636,7 +653,7 @@ window?.onload = ->
 
 ## VDOM simulation of used subset of svg.js interface
 class VSVG
-  constructor: (@tag) ->
+  constructor: (@tag, @parent) ->
     @classes = new Set
     @attrs = new Map
     @children = []
@@ -669,6 +686,7 @@ class VSVG
     @removed = true
     @
   clear: ->
+    child.parent = undefined for child in @children
     @children = []
     @
   attr: (key, value) ->
@@ -692,10 +710,10 @@ class VSVG
     @classes.add c
     @
   group: ->
-    @children.push child = new VSVG 'g'
+    @children.push child = new VSVG 'g', @
     child
   line: (x1, y1, x2, y2) ->
-    @children.push child = new VSVG 'line'
+    @children.push child = new VSVG 'line', @
     child
     .attr 'x1', x1
     .attr 'y1', y1
@@ -706,14 +724,20 @@ class VSVG
     @attr 'stroke-width', width if width?
     @
   circle: (diameter) ->
-    @children.push child = new VSVG 'circle'
+    @children.push child = new VSVG 'circle', @
     child.attr 'r', diameter / 2
   center: (x, y) ->
     console.assert @tag == 'circle'
     @attr 'cx', x
     .attr 'cy', y
+  front: ->
+    i = @parent.children.indexOf @
+    console.assert i >= 0
+    @parent.children.splice i, 1
+    @parent.children.push @
+    @
   element: (tag) ->
-    @children.push child = new VSVG tag
+    @children.push child = new VSVG tag, @
     child
   words: (child) ->
     @innerHTML = child
@@ -729,7 +753,7 @@ class VSVG
         match[1]
     results = []
     results.each = (f) -> f.call node for node in @
-    for shortcut in ['stroke', 'remove']
+    for shortcut in ['stroke', 'remove', 'front']
       do (shortcut) ->
         results[shortcut] = (...args) ->
           for node in results
@@ -759,6 +783,7 @@ cli = (args = process.argv[2..]) ->
         -c/--cleanup    Remove unnecessary degree-0 and -2 vertices
         -g/--grid       Keep grid lines
         -u/--no-unfold  Don't color unfolded creases yellow
+        -n/--nice       Nice colors instead of pure RGB for Origami Simulator
     """
   formats = []
   cpFiles = []
@@ -776,6 +801,8 @@ cli = (args = process.argv[2..]) ->
         options.noUnfold = true
       when '-g', '--grid'
         options.grid = true
+      when '-n', '--nice'
+        options.nice = true
       else
         if arg.startsWith '-'
           console.log "Unknown option: #{arg}"
