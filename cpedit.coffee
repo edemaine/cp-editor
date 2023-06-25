@@ -254,7 +254,7 @@ class Editor
     ## Add face structure to @fold
     fold = FOLD.convert.deepCopy @fold
     FOLD.convert.edges_vertices_to_vertices_edges_sorted fold
-    FOLD.filter.cutEdges fold, FOLD.filter.edgesAssigned fold, 'C'
+    FOLD.filter.splitCuts fold
     #console.log 'cut', fold
     FOLD.convert.vertices_edges_to_faces_vertices_edges fold
     #console.log fold
