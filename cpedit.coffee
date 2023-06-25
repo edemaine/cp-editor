@@ -19,7 +19,7 @@ class Editor
     @redoStack = []
     @updateUndoStack()
     @fold =
-      file_spec: 1.1
+      file_spec: 1.2
       file_creator: 'Crease Pattern Editor'
       file_classes: ['singleModel']
       frame_classes: ['creasePattern']
@@ -104,11 +104,11 @@ class Editor
     @drawEdge e for e in changedEdges[i] for i in [0, 1]
     @drawVertex v for v in [newVertices ... @fold.vertices_coords.length]
     #console.log @fold
-    #@loadCP @fold
+    #@loadFold @fold
   subdivide: ->
     FOLD.filter.collapseNearbyVertices @fold, FOLD.geom.EPS
     FOLD.filter.subdivideCrossingEdges_vertices @fold, FOLD.geom.EPS
-    @loadCP @fold
+    @loadFold @fold
 
   saveForUndo: ->
     @undoStack.push FOLD.convert.deepCopy @fold
@@ -118,13 +118,13 @@ class Editor
     return unless @undoStack.length
     @redoStack.push @fold
     @fold = @undoStack.pop()
-    @loadCP @fold
+    @loadFold @fold
     @updateUndoStack()
   redo: ->
     return unless @redoStack.length
     @undoStack.push @fold
     @fold = @redoStack.pop()
-    @loadCP @fold
+    @loadFold @fold
     @updateUndoStack()
   updateUndoStack: ->
     document?.getElementById('undo')?.disabled = (@undoStack.length == 0)
@@ -143,7 +143,7 @@ class Editor
       for ints, v in integers
         for int, i in ints when int
           @fold.vertices_coords[v][i] = Math.round @fold.vertices_coords[v][i]
-    @loadCP @fold
+    @loadFold @fold
   reflectX: ->
     {xMin, xMax} = @fold['cpedit:page']
     @transform FOLD.geom.matrixReflectAxis 0, 2, (xMin + xMax) / 2
@@ -167,7 +167,8 @@ class Editor
   shiftU: -> @translate 0, -1
   shiftD: -> @translate 0, +1
 
-  loadCP: (@fold) ->
+  loadFold: (@fold) ->
+    @fold.version = 1.2
     @mode?.exit @
     @drawVertices()
     @fold.edges_foldAngle ?=
@@ -244,29 +245,29 @@ class Editor
     @drawVertices()
     @drawEdges()
 
-  downloadCP: ->
-    json = FOLD.convert.toJSON @fold
-    a = document.getElementById 'cplink'
-    a.href = URL.createObjectURL new Blob [json], type: "application/json"
-    a.download = (@fold.file_title or 'creasepattern') + '.cp'
-    a.click()
-  convertToFold: (json = true) ->
+  convertToFold: (splitCuts, json = true) ->
     ## Add face structure to @fold
     fold = FOLD.convert.deepCopy @fold
     FOLD.convert.edges_vertices_to_vertices_edges_sorted fold
-    FOLD.filter.splitCuts fold
-    #console.log 'cut', fold
+    fold.frame_classes = (c for c in fold.frame_classes ? [] \
+      when c not in ['cuts', 'noCuts'])
+    unless FOLD.filter.cutEdges(fold).length
+      fold.frame_classes.push 'noCuts'
+    else if splitCuts
+      fold.frame_classes.push 'noCuts'
+      FOLD.filter.splitCuts fold
+      #console.log 'cut', fold
+    else
+      fold.frame_classes.push 'cuts'
     FOLD.convert.vertices_edges_to_faces_vertices_edges fold
     #console.log fold
     fold = FOLD.convert.toJSON fold if json
     fold
   downloadFold: ->
-    ## Export and download
-    json = @convertToFold()
-    a = document.getElementById 'foldlink'
-    a.href = URL.createObjectURL new Blob [json], type: "application/json"
-    a.download = (@fold.file_title or 'creasepattern') + '.fold'
-    a.click()
+    #json = FOLD.convert.toJSON @fold  # minimal content
+    @download @convertToFold(false), 'application/json', '.fold'
+  downloadSplitFold: ->
+    @download @convertToFold(true), 'application/json', '-split.fold'
   convertToSVG: (options) ->
     svg = @svg.clone()
     svg.find('.C').front()
@@ -305,11 +306,14 @@ class Editor
     svg.svg()
     .replace /[ ]id="[^"]+"/g, ''
   downloadSVG: ->
-    svg = @convertToSVG()
-    a = document.getElementById 'svglink'
-    a.href = URL.createObjectURL new Blob [svg], type: "image/svg+xml"
-    a.download = (@fold.file_title or 'creasepattern') + '.svg'
+    @download @convertToSVG(), 'image/svg+xml', '.svg'
+  download: (content, type, extension) ->
+    a = document.getElementById 'download'
+    a.href = url = URL.createObjectURL new Blob [content], {type}
+    a.download = (@fold.file_title or 'creasepattern') + extension
     a.click()
+    a.href = ''
+    URL.revokeObjectURL url
 
 class Mode
 
@@ -533,8 +537,9 @@ window?.onload = ->
           input.addEventListener 'change', (e) ->
             return unless input.checked
             editor.setLineType input.value
-      input.parentElement.addEventListener 'click', ->
-        input.click()
+      input.parentElement.addEventListener 'click', (e) ->
+        unless e.target == input or e.target.tagName in ['LABEL', 'INPUT', 'A']
+          input.click()
   window.addEventListener 'keyup', (e) =>
     switch e.key
       when 'd', 'D'
@@ -566,24 +571,25 @@ window?.onload = ->
       document.getElementById(id).addEventListener 'click', (e) ->
         e.stopPropagation()
         editor[id]()
-  document.getElementById('loadCP').addEventListener 'click', (e) ->
+  document.getElementById('loadFold').addEventListener 'click', (e) ->
     e.stopPropagation()
-    document.getElementById('fileCP').click()
-  document.getElementById('fileCP').addEventListener 'input', (e) ->
+    document.getElementById('fileFold').click()
+  document.getElementById('fileFold').addEventListener 'input', (e) ->
     e.stopPropagation()
     return unless e.target.files.length
     file = e.target.files[0]
     reader = new FileReader
     reader.onload = ->
-      editor.loadCP JSON.parse reader.result
+      editor.loadFold JSON.parse reader.result
     reader.readAsText file
-  document.getElementById('downloadCP').addEventListener 'click', (e) ->
-    e.stopPropagation()
-    editor.downloadCP()
   document.getElementById('downloadFold').addEventListener 'click', (e) ->
     e.stopPropagation()
     editor.downloadFold()
+  document.getElementById('downloadSplitFold').addEventListener 'click', (e) ->
+    e.stopPropagation()
+    editor.downloadSplitFold()
   document.getElementById('downloadSVG').addEventListener 'click', (e) ->
+    e.preventDefault()
     e.stopPropagation()
     editor.downloadSVG()
   for [size, dim] in [['width', 'x'], ['height', 'y']]
@@ -634,7 +640,7 @@ window?.onload = ->
       ready = false
       #simulator = window.open 'OrigamiSimulator/?model=', 'simulator'
       simulator = window.open 'https://origamisimulator.org/?model=', 'simulator'
-    fold = editor.convertToFold false
+    fold = editor.convertToFold true, false  # split cuts, no JSON
     ## Origami Simulator wants 'F' for unfolded (facet) creases;
     ## it uses 'U' for undriven creases. :-/
     fold.edges_assignment =
@@ -775,7 +781,7 @@ cli = (args = process.argv[2..]) ->
   fs = require 'fs'
   unless args.length
     console.log """
-      Usage: coffee cpedit.coffee [formats/options] file1.cp file2.cp ...
+      Usage: coffee cpedit.coffee [formats/options] file1.fold file2.fold ...
       Formats:
         -s/--svg   .svg
         -f/--fold  .fold
@@ -811,11 +817,11 @@ cli = (args = process.argv[2..]) ->
   for cpFile in cpFiles
     editor = new Editor new VSVG 'svg'
     cpData = JSON.parse fs.readFileSync cpFile, encoding: 'utf8'
-    editor.loadCP cpData
+    editor.loadFold cpData
     editor.cleanup() if cleanup
     for format in formats
       output = editor["convertTo#{format}"] options
-      outputPath = cpFile.replace /(\.cp)?$/, ".#{format.toLowerCase()}"
+      outputPath = cpFile.replace /(\.(fold|cp))?$/, ".#{format.toLowerCase()}"
       fs.writeFileSync outputPath, output, encoding: 'utf8'
 
 cli() if module? and require?.main == module

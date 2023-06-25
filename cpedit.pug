@@ -1,3 +1,4 @@
+doctype html
 html
   head
     meta(charset="utf-8")
@@ -10,17 +11,15 @@ html
   body
     #menu
       .input.clickable
-        input#loadCP(type='button', value='Load .cp', title='Load previously saved .cp file')
-        input#fileCP(type='file', style='display: none')
+        input#loadFold(type='button', value='Load FOLD 1.2', title='Load previously saved .fold file (including cut edges), previously named .cp files (which also work)')
+        input#fileFold(type='file', style='display: none')
       .input.clickable
-        input#downloadCP(type='button', value='Save .cp', title='For reloading with this editor (weird .fold-like format)')
-        a#cplink
+        input#downloadFold(type='button', value='Save FOLD 1.2', title='For reloading with this editor, and other software supporting cut edges')
+        a#download
       .input.clickable
-        input#downloadFold(type='button', value='Export .fold', title='For all software supporting .fold, including Freeform Origami and Origami Simulator')
-        a#foldlink
+        input#downloadSplitFold(type='button', value = 'Export FOLD w/o cuts', title='Separate all cuts into boundaries. For most software supporting .fold, including Freeform Origami and Origami Simulator. Do not reload with this editor.')
       .input.clickable
-        input#downloadSVG(type='button', value='Export .svg', title='For Origami Simulator or paper figures')
-        a#svglink
+        input#downloadSVG(type='button', value='Export SVG', title='For Origami Simulator or paper figures')
       .input.clickable
         input#simulate(type='button', value='Simulate', title='Launch Origami Simulator in a new window with current pattern')
       .input.clickable
